@@ -9,7 +9,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node --test",
+    "test": "npm run test:node && npm run test:jest",
+    "test:node": "node --test",
+    "test:jest": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
     "check": "node --check src/server.js && node --check src/app.js"
   },
   "dependencies": {
@@ -28,5 +30,13 @@
     "nodemailer": "^10.0.16",
     "winston": "^3.17.0",
     "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "jest": "^30.5.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testMatch": ["<rootDir>/src/tests/**/*.jest.js"]
   }
 }

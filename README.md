@@ -238,3 +238,48 @@ Use the Phase 2 group and three active members A, B, and C. Get their **group me
 Placeholder merge verification: create an expense where a placeholder is payer/split participant, then call `POST /api/groups/:groupId/placeholders/:placeholderId/merge` as admin with `{ "memberId": "<targetMemberId>" }`. Check that all expense references now point to the target member and any duplicate target/placeholder rows were collapsed. A non-admin call must return 403. Transaction-backed tests require Atlas/replica-set MongoDB; live receipt upload requires valid Cloudinary credentials.
 
 The three requested largest-remainder examples were run and their outputs are covered by `src/tests/splitCalculator.test.js`: `[3334, 3333, 3333]`, `[3333, 6667]`, and `[49999, 30000, 20000]`. Unit coverage runs using `npm test` without MongoDB or Cloudinary.
+
+## Phase 4: Balances and simplified debts
+
+Balances are derived on every request from non-deleted expense and settlement records; no balance snapshots are stored. The sign convention is `net = paid - owed + settledPaid - settledReceived`: positive means the member should receive money, negative means they owe. Amounts remain integer paise through the aggregation and are converted to rupees only in API responses. Group balance responses include `isBalanced`, which is true when the sum of all calculated member nets is zero.
+
+### Routes
+
+All routes require authentication. Group endpoints also require the caller to be an active member; non-members receive 404.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/groups/:groupId/balances` | Member-by-member paid, owed, settlements, net, and zero-sum check |
+| GET | `/api/groups/:groupId/simplify` | Greedy settle-up plan for the group |
+| GET | `/api/groups/:groupId/simplify?mine=true` | Only transfers involving the current group-member ID |
+| GET | `/api/users/me/balances` | Current user's group balances with summaries grouped by currency |
+
+MongoDB aggregation pipelines unwind payer/split arrays and group integer-paise totals. Four aggregates run in parallel for expense paid, expense owed, settlement paid, and settlement received. Simplification uses max-heaps to match the largest debtor and creditor repeatedly. Each transfer settles at least one side, producing no more than `n - 1` transfers for `n` non-zero members; this practical greedy algorithm is not guaranteed to find the mathematical global minimum.
+
+The `Settlement` model is present now so balance calculation and placeholder-history merging can include settlements; settlement creation/edit/delete routes are intentionally deferred to Phase 5. The Phase 2 member leave/remove and group archive guards now use actual computed net balances rather than zero-valued stubs. Placeholder merge updates expense and settlement member references within the same MongoDB transaction, and self-settlements created by the merge are soft-deleted. These transaction-backed operations require Atlas or another replica-set/sharded MongoDB deployment.
+
+### Postman verification
+
+Use the Phase 3 group with A, B, and C as active members. Remove old test expenses first. Add two expenses: A pays ₹3000 split EQUAL among all three; B pays ₹900 split EQUAL among all three. Use each embedded group member `_id`, not account `_id`.
+
+| # | Request | Expected |
+| --- | --- | --- |
+| 1 | A: `GET /api/groups/:groupId/balances` | A `+1700`, B `-400`, C `-1300`; `isBalanced: true`; A's `you.balance` is `1700` |
+| 2 | B: same balance request | B's `you.balance` is `-400` |
+| 3 | Inspect A's balance row | `paid: 3000`, `owed: 1300` |
+| 4 | A: `GET /api/groups/:groupId/simplify` | 2 transfers: C → A ₹1300 and B → A ₹400 |
+| 5 | B: simplify with `?mine=true` | Only B → A ₹400 |
+| 6 | A: simplify with `?mine=true` | Both transfers, since A is recipient in both |
+| 7 | A: `GET /api/users/me/balances` | INR summary: owed ₹1700, owe ₹0, net ₹1700; Goa Trip appears in groups |
+| 8 | C: `GET /api/users/me/balances` | INR summary shows C owes ₹1300 |
+| 9 | C: `POST /api/groups/:groupId/leave` | 400 unsettled-balance error |
+| 10 | A: remove C with `DELETE /api/groups/:groupId/members/:cMemberId` | 400 unsettled-balance error |
+| 11 | A: archive group with `DELETE /api/groups/:groupId` | 400 settle-all-balances error |
+| 12 | Delete the second expense, then request balances | A `+2000`, B `0`, C `-1000`; B can now leave |
+| 13 | Add EXACT, SHARES, and multi-payer expenses; request balances | `isBalanced` remains true for each valid expense |
+| 14 | A non-member requests group balances and simplify | Both return 404 |
+| 15 | Create a new group with no expenses; request balances and simplify | All member nets are zero and transaction list is empty |
+| 16 | Add an expense involving placeholder Rahul, record balances, then merge Rahul into B | Rahul's obsolete row is hidden; B inherits the merged expense history; `isBalanced: true` |
+| 17 | A: `GET /api/groups/:groupId/simplify?mine=maybe` | 400 validation error |
+
+Settlement effects are unit-tested via the corrected balance formula and will be exercised through HTTP once Phase 5 adds settlement routes. The `npm test` command runs both the retained Node regression suite and Jest's ESM balance/split/debt tests. The Jest suite includes seeded property tests over 200 random balance sets and 500 random split distributions, so it is deterministic and needs no database.
