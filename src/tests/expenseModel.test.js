@@ -22,12 +22,20 @@ test('expense model rejects fractional paise and financial totals that do not ba
 });
 
 test('expense JSON converts paise to rupees and hides Cloudinary public IDs', () => {
-  const expense = validExpense({ receiptPublicId: 'secret/public-id' });
+  const expense = validExpense({
+    receiptPublicId: 'secret/public-id',
+    comments: [{
+      user: '507f191e810c19729de860ec',
+      userName: 'Asha',
+      text: 'Paid by UPI'
+    }]
+  });
   const result = expense.toJSON();
 
   assert.equal(result.amount, 100);
   assert.equal(result.paidBy[0].amount, 100);
   assert.equal(result.splits[0].owedAmount, 100);
   assert.equal(result.receiptPublicId, undefined);
+  assert.equal(result.comments[0].text, 'Paid by UPI');
   assert.equal(expense.toObject().amount, 10000);
 });

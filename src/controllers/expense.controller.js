@@ -18,7 +18,12 @@ export const getExpense = asyncHandler(async (request, response) => (
 ));
 
 export const updateExpense = asyncHandler(async (request, response) => {
-  const expense = await expenseService.updateExpense(request.expense, request.group, request.validated.body);
+  const expense = await expenseService.updateExpense(
+    request.expense,
+    request.group,
+    request.user,
+    request.validated.body
+  );
   return sendSuccess(response, 200, 'Expense updated', { expense });
 });
 

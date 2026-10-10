@@ -16,6 +16,7 @@ test('settlement requires integer paise and cannot pay itself', async () => {
 
   const settlement = new Settlement(base);
   await settlement.validate();
+  assert.equal(settlement.status, 'completed');
   assert.equal(settlement.toJSON().amount, 100.5);
   assert.equal(settlement.toObject().amount, 10050);
 });

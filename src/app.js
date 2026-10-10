@@ -9,6 +9,7 @@ import healthRoutes from './routes/healthRoutes.js';
 import groupRoutes from './routes/group.routes.js';
 import inviteRoutes from './routes/invite.routes.js';
 import expenseRoutes from './routes/expense.routes.js';
+import settlementRoutes from './routes/settlement.routes.js';
 import userRoutes from './routes/userRoutes.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { inviteLimiter } from './middleware/rateLimiter.js';
@@ -38,6 +39,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/invite', inviteLimiter, inviteRoutes);
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/settlements', settlementRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 

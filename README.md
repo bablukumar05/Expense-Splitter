@@ -283,3 +283,61 @@ Use the Phase 3 group with A, B, and C as active members. Remove old test expens
 | 17 | A: `GET /api/groups/:groupId/simplify?mine=maybe` | 400 validation error |
 
 Settlement effects are unit-tested via the corrected balance formula and will be exercised through HTTP once Phase 5 adds settlement routes. The `npm test` command runs both the retained Node regression suite and Jest's ESM balance/split/debt tests. The Jest suite includes seeded property tests over 200 random balance sets and 500 random split distributions, so it is deterministic and needs no database.
+
+## Phase 5: Settlements, activity, comments, notifications
+
+### Routes
+
+| Method | Path | Access | Purpose |
+| --- | --- | --- | --- |
+| POST | `/api/groups/:groupId/settlements` | Active group member; payer must be caller | Record a payment between two active group members |
+| GET | `/api/groups/:groupId/settlements` | Active group member | Paginated history; supports `from`, `to`, and `method` filters |
+| DELETE | `/api/settlements/:settlementId` | Settlement creator or group admin | Undo via soft deletion; recalculates balances automatically |
+| GET | `/api/groups/:groupId/activity` | Active group member | Paginated group activity newest-first |
+| POST | `/api/expenses/:expenseId/comments` | Active group member | Add a comment |
+| GET | `/api/expenses/:expenseId/comments` | Active group member | Read comments in chronological order |
+| DELETE | `/api/expenses/:expenseId/comments/:commentId` | Comment author or group admin | Delete a comment |
+
+Settlement request example (amount is rupees at the API boundary):
+
+```json
+POST /api/groups/:groupId/settlements
+{
+	"from": "<debtorGroupMemberId>",
+	"to": "<creditorGroupMemberId>",
+	"amount": 1300,
+	"method": "upi",
+	"note": "Paid via UPI"
+}
+```
+
+The payer must be the authenticated member, both IDs must identify active members of this group, the payer must have a negative balance, and the recipient must have a positive balance. The amount is stored as integer paise and cannot exceed the smaller of the debtor's outstanding amount and the creditor's receivable. A per-group `balanceRevision` write inside the MongoDB transaction serializes concurrent settlements and balance-changing expense writes; conditional updates retry/fail rather than accepting an over-settlement. Existing groups without this field are supported. Undo sets settlement `status` to `void`, marks it deleted, and lets the aggregate recalculate the balances.
+
+Settlement creation/undo, expense create/update/delete, and their activity records run in MongoDB transactions. The notification sender is an in-process asynchronous queue: it does not wait for SMTP before returning the API response, catches/logs delivery failures, and continues draining later jobs. It is queue-like, not durable; pending mail can be lost if the process exits. Configure the existing SMTP variables to deliver invitation, group-join, expense-involvement, and settlement-received emails.
+
+Activity records include event key, actor name/ID, message, entity reference, target member where relevant, metadata, and timestamp. Events include invite sent, joined via invite, member removed, expense added/deleted/commented, settlement recorded, and settlement undone. Expense comments are embedded in the expense document; only the author or a group admin can delete them.
+
+### Postman verification
+
+Use the Phase 4 A/B/C group and existing expenses that yield A `+1700`, B `-400`, and C `-1300`. Use embedded group-member IDs. A settlement must be made by its `from` member.
+
+| # | Request | Expected |
+| --- | --- | --- |
+| 1 | C: post settlement from C to A for ₹1300 using `method: "upi"` | 201; settlement JSON amount is rupees, stored amount is 130000 paise |
+| 2 | Refresh group balances and simplify plan | C becomes 0; A's net receivable drops by ₹1300; corresponding transfer disappears |
+| 3 | A: `GET /api/groups/:groupId/settlements` | 200; settlement appears with pagination |
+| 4 | C pays A ₹1200, then tries another ₹101 while only ₹100 remains | First returns 201; second returns 400 over-settlement |
+| 5 | B tries to record a settlement from C | 403; caller can record only a payment from their own member account |
+| 6 | Group member tries self-settlement or uses an inactive/foreign member ID | 400 validation/business error |
+| 7 | No token / non-member requests settlement history | 401 / 404 |
+| 8 | Creator C: `DELETE /api/settlements/:settlementId` | 200; record becomes void/deleted and balances reverse |
+| 9 | Another ordinary member deletes C's settlement; then admin deletes it | 403 for other member; admin is allowed |
+| 10 | A: `GET /api/groups/:groupId/activity` after invite, expense, remove, and settle actions | 200; expected event messages appear newest-first |
+| 11 | B: `POST /api/expenses/:expenseId/comments` with `{ "text": "Paid for parking" }` | 201; comment includes author snapshot and timestamp |
+| 12 | A: `GET /api/expenses/:expenseId/comments` | 200; comment visible to active group member |
+| 13 | A tries deleting B's comment; then B deletes it | 403 for A; 200 for author B |
+| 14 | Admin deletes a different member's comment | 200 |
+| 15 | Send an empty/over-2000-character comment | 400 validation error |
+| 16 | Create expense involving B, then settle to A with SMTP enabled | Expense/settlement requests return without waiting for email; B/A receive queued notices after the response |
+
+Transactions and over-settlement protection require Atlas or a replica-set/sharded MongoDB deployment. SMTP-backed delivery requires valid SMTP credentials. Unit tests for validation, balance math, settlement limits, comment permissions, activity shape, and queue behavior run without external services via `npm test`.

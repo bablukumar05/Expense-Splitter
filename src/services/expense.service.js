@@ -1,11 +1,19 @@
 import mongoose from 'mongoose';
 import Expense from '../models/Expense.js';
+import { User } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
 import { fromPaise, toPaise } from '../utils/money.js';
 import { calculateSplits } from '../utils/splitCalculator.js';
+import { logActivity } from './activity.service.js';
+import { notificationQueue } from './notificationQueue.js';
+import { lockGroupBalanceRevision } from './balanceRevision.service.js';
+import { sendEmail } from '../utils/sendEmail.js';
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const toObjectId = (value) => new mongoose.Types.ObjectId(value);
+const escapeHtml = (value) => value.replace(/[&<>"']/g, (character) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[character]));
 
 function assertValidMembers(ids, allowedMembers, label) {
   const seen = new Set();
@@ -49,50 +57,135 @@ function buildFinancials(group, { amount, paidBy, splitType, splits }, existingM
 }
 
 export async function createExpense(group, user, body) {
-  const financials = buildFinancials(group, body);
-  return Expense.create({
-    group: group._id,
-    description: body.description,
-    amount: financials.total,
-    currency: group.currency,
-    category: body.category,
-    date: body.date,
-    notes: body.notes,
-    paidBy: financials.paidBy,
-    splitType: financials.splitType,
-    splits: financials.splits,
-    createdBy: user._id
-  });
-}
+  const session = await mongoose.startSession();
+  let currentGroup;
+  let expense;
+  let financials;
 
-export async function updateExpense(expense, group, body) {
-  const { amount, paidBy, splitType, splits, ...details } = body;
+  try {
+    await session.withTransaction(async () => {
+      currentGroup = await lockGroupBalanceRevision(group._id, session);
+      if (!currentGroup.findActiveMemberByUser(user._id)) throw new AppError('Group not found', 404);
+      financials = buildFinancials(currentGroup, body);
+      expense = new Expense({
+        group: currentGroup._id,
+        description: body.description,
+        amount: financials.total,
+        currency: currentGroup.currency,
+        category: body.category,
+        date: body.date,
+        notes: body.notes,
+        paidBy: financials.paidBy,
+        splitType: financials.splitType,
+        splits: financials.splits,
+        createdBy: user._id
+      });
+      await expense.save({ session });
 
-  for (const field of ['description', 'category', 'date', 'notes']) {
-    if (details[field] !== undefined) expense[field] = details[field];
+      await logActivity({
+        groupId: currentGroup._id,
+        actorId: user._id,
+        actorName: user.name,
+        event: 'expense.created',
+        message: `${user.name} added expense "${body.description}"`,
+        entityType: 'expense',
+        entityId: expense._id,
+        metadata: { amount: financials.total, currency: currentGroup.currency },
+        session
+      });
+    });
+  } finally {
+    await session.endSession();
   }
 
-  if (amount !== undefined) {
-    const existingMemberIds = [
-      ...expense.paidBy.map((payer) => payer.member),
-      ...expense.splits.map((split) => split.member)
-    ];
-    const financials = buildFinancials(group, { amount, paidBy, splitType, splits }, existingMemberIds);
-    expense.amount = financials.total;
-    expense.paidBy = financials.paidBy;
-    expense.splitType = financials.splitType;
-    expense.splits = financials.splits;
+  const involvedIds = new Set([
+    ...body.paidBy.map((payer) => String(payer.member)),
+    ...body.splits.map((split) => String(split.member))
+  ]);
+  const accountIds = [...new Set(currentGroup.members
+      .filter((member) => member.user && involvedIds.has(String(member._id)) && String(member.user) !== String(user._id))
+    .map((member) => String(member.user)))];
+
+  if (accountIds.length > 0) {
+    notificationQueue.enqueue(async () => {
+      const recipients = await User.find({ _id: { $in: accountIds } }).select('email');
+      const safeDescription = escapeHtml(body.description);
+      const safeActorName = escapeHtml(user.name);
+      await Promise.all(recipients.filter((recipient) => recipient.email).map((recipient) => sendEmail({
+        to: recipient.email,
+        subject: 'A new expense involves you',
+        text: `${user.name} added an expense: ${body.description} (${body.amount} ${group.currency}).`,
+        html: `<p>${safeActorName} added an expense involving you: <b>${safeDescription}</b> (${body.amount} ${group.currency}).</p>`
+      })));
+    });
   }
 
-  await expense.save();
   return expense;
 }
 
+export async function updateExpense(expense, group, user, body) {
+  const session = await mongoose.startSession();
+  let updatedExpense;
+  try {
+    await session.withTransaction(async () => {
+      const currentGroup = await lockGroupBalanceRevision(group._id, session);
+      if (!currentGroup.findActiveMemberByUser(user._id)) throw new AppError('Expense not found', 404);
+      updatedExpense = await Expense.findOne({ _id: expense._id, group: currentGroup._id, isDeleted: false })
+        .session(session);
+      if (!updatedExpense) throw new AppError('Expense not found', 404);
+
+      const { amount, paidBy, splitType, splits, ...details } = body;
+      for (const field of ['description', 'category', 'date', 'notes']) {
+        if (details[field] !== undefined) updatedExpense[field] = details[field];
+      }
+
+      if (amount !== undefined) {
+        const existingMemberIds = [
+          ...updatedExpense.paidBy.map((payer) => payer.member),
+          ...updatedExpense.splits.map((split) => split.member)
+        ];
+        const financials = buildFinancials(currentGroup, { amount, paidBy, splitType, splits }, existingMemberIds);
+        updatedExpense.amount = financials.total;
+        updatedExpense.paidBy = financials.paidBy;
+        updatedExpense.splitType = financials.splitType;
+        updatedExpense.splits = financials.splits;
+      }
+
+      await updatedExpense.save({ session });
+    });
+  } finally {
+    await session.endSession();
+  }
+  return updatedExpense;
+}
+
 export async function softDeleteExpense(expense, user) {
-  expense.isDeleted = true;
-  expense.deletedAt = new Date();
-  expense.deletedBy = user._id;
-  await expense.save();
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      const group = await lockGroupBalanceRevision(expense.group, session);
+      if (!group.findActiveMemberByUser(user._id)) throw new AppError('Expense not found', 404);
+      const currentExpense = await Expense.findOne({ _id: expense._id, isDeleted: false }).session(session);
+      if (!currentExpense) throw new AppError('Expense not found', 404);
+
+      currentExpense.isDeleted = true;
+      currentExpense.deletedAt = new Date();
+      currentExpense.deletedBy = user._id;
+      await currentExpense.save({ session });
+      await logActivity({
+        groupId: group._id,
+        actorId: user._id,
+        actorName: user.name,
+        event: 'expense.deleted',
+        message: `${user.name} deleted expense "${currentExpense.description}"`,
+        entityType: 'expense',
+        entityId: currentExpense._id,
+        session
+      });
+    });
+  } finally {
+    await session.endSession();
+  }
 }
 
 function endOfUtcDay(date) {

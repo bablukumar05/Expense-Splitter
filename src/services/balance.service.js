@@ -231,7 +231,7 @@ export async function mergeMemberHistory({ groupId, fromMemberId, toMemberId, se
   );
   await Settlement.updateMany(
     { group: groupId, from: toMemberId, to: toMemberId, isDeleted: false },
-    { $set: { isDeleted: true, deletedAt: new Date() } },
+    { $set: { isDeleted: true, deletedAt: new Date(), status: 'void' } },
     { session }
   );
 }

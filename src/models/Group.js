@@ -32,6 +32,7 @@ const groupSchema = new mongoose.Schema({
   currency: { type: String, default: 'INR', uppercase: true, minlength: 3, maxlength: 3 },
   members: { type: [memberSchema], default: [] },
   invite: { type: inviteSchema, required: true, select: false },
+  balanceRevision: { type: Number, default: 0, select: false },
   isArchived: { type: Boolean, default: false },
   archivedAt: { type: Date, default: null }
 }, { timestamps: true });

@@ -14,6 +14,7 @@ const settlementSchema = new mongoose.Schema({
   method: { type: String, enum: ['cash', 'upi', 'bank', 'other'], default: 'cash' },
   note: { type: String, trim: true, maxlength: 200, default: '' },
   date: { type: Date, default: Date.now },
+  status: { type: String, enum: ['completed', 'void'], default: 'completed' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   isDeleted: { type: Boolean, default: false },
   deletedAt: { type: Date, default: null }

@@ -7,6 +7,7 @@ import {
   groupHasUnsettledBalances,
   mergeMemberHistory
 } from './balance.service.js';
+import { logActivity } from './activity.service.js';
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -117,6 +118,16 @@ export async function removeMember(group, memberId, actorMember, block = false) 
   member.isBlocked = block;
   member.leftAt = new Date();
   await group.save();
+  await logActivity({
+    groupId: group._id,
+    actorId: actorMember.user,
+    actorName: actorMember.name,
+    event: 'group.member_removed',
+    message: `${actorMember.name} removed ${member.name}`,
+    targetMember: member._id,
+    targetName: member.name,
+    metadata: { blocked: block }
+  });
   return group;
 }
 

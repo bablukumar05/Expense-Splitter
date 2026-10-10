@@ -29,6 +29,13 @@ const splitSchema = new mongoose.Schema({
   shares: { type: Number, min: 1, validate: Number.isSafeInteger }
 }, { _id: false });
 
+const commentSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  userName: { type: String, required: true, trim: true, maxlength: 80 },
+  text: { type: String, required: true, trim: true, maxlength: 2000 },
+  createdAt: { type: Date, default: Date.now }
+});
+
 const expenseSchema = new mongoose.Schema({
   group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true },
   description: { type: String, required: true, trim: true, maxlength: 100 },
@@ -53,6 +60,7 @@ const expenseSchema = new mongoose.Schema({
   notes: { type: String, trim: true, maxlength: 500, default: '' },
   receiptUrl: { type: String, default: '' },
   receiptPublicId: { type: String, default: '' },
+  comments: { type: [commentSchema], default: [] },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   isDeleted: { type: Boolean, default: false },
   deletedAt: { type: Date, default: null },

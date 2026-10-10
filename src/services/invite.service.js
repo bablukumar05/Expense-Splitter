@@ -4,6 +4,8 @@ import { AppError } from '../utils/AppError.js';
 import { generateInviteCode } from '../utils/inviteCode.js';
 import { sendEmail } from '../utils/sendEmail.js';
 import { countUserGroups } from './group.service.js';
+import { logActivity } from './activity.service.js';
+import { notificationQueue } from './notificationQueue.js';
 
 const buildLink = (code) => new URL(`/join/${code}`, env.FRONTEND_URL).toString();
 
@@ -72,12 +74,22 @@ export async function inviteByEmail(group, inviter, email) {
   const escapedInviter = escapeHtml(inviter.name);
   const escapedLink = escapeHtml(link);
 
-  await sendEmail({
+  await logActivity({
+    groupId: currentGroup._id,
+    actorId: inviter._id,
+    actorName: inviter.name,
+    event: 'group.invitation_sent',
+    message: `${inviter.name} invited someone to ${currentGroup.name}`,
+    entityType: 'group',
+    entityId: currentGroup._id
+  });
+
+  notificationQueue.enqueue(() => sendEmail({
     to: email,
     subject: `${safeHeader(inviter.name)} invited you to "${safeHeader(currentGroup.name)}"`,
     text: `${inviter.name} invited you to join ${currentGroup.name} on Expense Splitter. Join: ${link}`,
     html: `<p>${escapedInviter} invited you to join <b>${escapedName}</b> on Expense Splitter.</p><p><a href="${escapedLink}">Join the group</a></p>`
-  });
+  }));
 }
 
 function assertInviteActive(group) {
@@ -188,5 +200,27 @@ export async function joinViaInvite(user, code) {
   if (!updated) {
     throw new AppError('Could not join. The link may have just expired or the group became full.', 409);
   }
+
+  const joinedMember = updated.findMemberByUser(user._id);
+  await logActivity({
+    groupId: updated._id,
+    actorId: user._id,
+    actorName: user.name,
+    event: 'group.member_joined',
+    message: `${user.name} joined via invite link`,
+    targetMember: joinedMember?._id,
+    targetName: user.name,
+    metadata: { source: 'invite' }
+  });
+
+  if (user.email) {
+    notificationQueue.enqueue(() => sendEmail({
+      to: user.email,
+      subject: `You joined ${updated.name}`,
+      text: `You joined ${updated.name} on Expense Splitter.`,
+      html: `<p>You joined <b>${escapeHtml(updated.name)}</b> on Expense Splitter.</p>`
+    }));
+  }
+
   return updated;
 }
