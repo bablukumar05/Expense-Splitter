@@ -110,7 +110,7 @@ Every member entry has its own MongoDB `_id`; Phase 3 expenses must reference th
 
 Invite codes contain 128 random bits. Public invite preview and join routes share a limit of 30 requests per 15 minutes per client IP. Preview deliberately returns no member identities or other group details. The join update atomically checks invite state, expiry, max uses, and the 50-member cap before incrementing usage and adding/reactivating a member. Admin email invitations do not look up recipient accounts and return the same success message for registered and unregistered email addresses. Non-members receive 404 when requesting a group to avoid disclosing its existence.
 
-Limits are 50 active members per group and 100 active groups per account. Only admins can merge a placeholder into an active registered member; the target member ID is explicit, and the history merge plus placeholder deactivation run in a MongoDB transaction. The history merge itself is a stub until expense/settlement models exist. The balance service currently returns zero for all members and no unsettled groups; replace these Phase 2 stubs with expense and settlement calculations in Phase 4. MongoDB transactions require Atlas or another replica-set/sharded deployment; a standalone local `mongod` cannot run the merge endpoint successfully. Archived groups can be restored by an active group admin for 30 days after archival.
+Limits are 50 active members per group and 100 active groups per account. Only admins can merge a placeholder into an active registered member; the target member ID is explicit, and the expense-history merge plus placeholder deactivation run in a MongoDB transaction. The balance service still returns zero for all members and no unsettled groups; replace these balance stubs with expense and settlement calculations in Phase 4. MongoDB transactions require Atlas or another replica-set/sharded deployment; a standalone local `mongod` cannot run the merge endpoint successfully. Archived groups can be restored by an active group admin for 30 days after archival.
 
 ### Postman verification
 
@@ -155,3 +155,86 @@ Additional hardening checks:
 | Group type and emoji | `POST /api/groups` with `{ "name": "Flat", "type": "home", "emoji": "🏠" }` | 201; response contains `type: "home"` and `emoji: "🏠"` |
 
 Also check validation with an invalid ObjectId, invalid role, empty update body, expired invite date, `page=0`, and `block=yes`; each returns HTTP 400 with field details. The Phase 2 unit suite runs with `npm test` and does not need MongoDB. Full Postman flows require a running database; placeholder merge requires Atlas or another replica-set/sharded deployment, and email invitation checks require SMTP settings.
+
+## Phase 3: Expenses
+
+All expense references use the embedded group-member `_id`, never the account's `user._id`, so placeholders can be payers and participants. API monetary inputs and JSON responses are rupees with at most two decimal places. MongoDB stores every amount as an integer number of paise (for example, ₹100.50 is `10050`). Split rounding uses the deterministic largest-remainder method so payer/split sums exactly equal the expense total. Group currency is applied to the expense; currency conversion is not part of Phase 3.
+
+### Routes
+
+All routes require a signed-in active group member, except that reading/updating/deleting a particular expense first returns 404 unless it is visible through an active membership. For update, delete, and receipt operations, the expense creator or a group admin is required.
+
+| Method | Path | Access | Purpose |
+| --- | --- | --- | --- |
+| POST | `/api/groups/:groupId/expenses` | Active group member | Create expense with one or more payers and one of four split types |
+| GET | `/api/groups/:groupId/expenses` | Active group member | Search/filter/sort/paginate expenses and return filtered total |
+| GET | `/api/expenses/:expenseId` | Active member of its group | Fetch a non-deleted expense |
+| PATCH | `/api/expenses/:expenseId` | Creator or group admin | Update expense details; all four financial fields change together |
+| DELETE | `/api/expenses/:expenseId` | Creator or group admin | Soft-delete the expense |
+| POST | `/api/expenses/:expenseId/receipt` | Creator or group admin | Upload a receipt image as multipart form-data field `receipt` |
+| DELETE | `/api/expenses/:expenseId/receipt` | Creator or group admin | Remove receipt metadata and Cloudinary image |
+
+Split types are `EQUAL`, `EXACT`, `PERCENTAGE`, and `SHARES`. `paidBy` accepts up to 20 `{ member, amount }` entries. `splits` accepts up to 50 `{ member, amount? , percentage?, shares? }` entries, with amounts in rupees. For `EXACT`, split `amount` values must equal the total. For `PERCENTAGE`, percentages must sum to exactly 100 using integer basis points. For `SHARES`, every participant must have a positive whole-number share count. For `EQUAL`, split entries only need their member IDs.
+
+Example request:
+
+```json
+POST /api/groups/:groupId/expenses
+{
+	"description": "Dinner",
+	"amount": 100,
+	"splitType": "EQUAL",
+	"paidBy": [{ "member": "<aMemberId>", "amount": 100 }],
+	"splits": [
+		{ "member": "<aMemberId>" },
+		{ "member": "<bMemberId>" },
+		{ "member": "<cMemberId>" }
+	]
+}
+```
+
+The response gives owed shares ₹33.34, ₹33.33, and ₹33.33; their sum is exactly ₹100. Expense JSON converts stored paise back to rupees, while `toObject()` and database records keep integer paise. Model validation independently checks that payer amounts and owed amounts each sum exactly to the stored total. Financial edits must include `amount`, `paidBy`, `splitType`, and `splits` together; detail-only edits may update description, category, date, or notes. Deleted expenses remain stored with `isDeleted`, `deletedAt`, and `deletedBy` and are omitted from normal list/get operations.
+
+The expense list supports `page`, `limit`, `search`, `category`, `from`, `to`, `paidBy`, `member`, `sortBy` (`date`, `amount`, or `createdAt`), and `order` (`asc` or `desc`). `summary.totalAmount` is the sum after the same filters, converted back to rupees. Payer and split member values in expense responses remain member IDs; resolve names from `GET /api/groups/:groupId` on the client.
+
+Receipts use Multer memory storage and are limited to one JPG/JPEG, PNG, or WEBP image up to 5 MiB. Authorization is checked before the upload middleware runs. Cloudinary is optional for non-receipt API use; receipt endpoints return 503 until all three `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` variables are configured. Uploaded images are resized to at most 1600×1600 and optimized; the internal Cloudinary public ID is never serialized. Replacing a receipt saves the new upload before attempting to remove the previous one.
+
+Phase 3 also replaces the Phase 2 placeholder-history stub: when an admin merges a placeholder into an active registered member, expense payer/split references are remapped inside the same MongoDB transaction. If the target already appears in an expense, duplicate entries collapse and their integer amounts are added. Settlement history remains for Phase 5. The merge endpoint requires Atlas or another replica-set/sharded MongoDB deployment.
+
+### Postman verification
+
+Use the Phase 2 group and three active members A, B, and C. Get their **group member IDs** from `GET /api/groups/:groupId`; do not use account IDs. Configure Cloudinary variables for receipt upload checks. All amounts below are rupees at the API boundary.
+
+| # | Request | Expected |
+| --- | --- | --- |
+| 1 | A: create ₹100 EQUAL expense; A pays ₹100; A/B/C split | 201; owed amounts ₹33.34, ₹33.33, ₹33.33 |
+| 2 | A: create ₹30 EXACT expense; splits A ₹15, B ₹9, C ₹6 | 201; stored amount is 3000 paise |
+| 3 | A: same EXACT request but C pays/split owes ₹5 | 400; exact split differs from total |
+| 4 | A: create ₹999.99 PERCENTAGE expense; A/B/C percentages 50/30/20 | 201; owed shares sum to ₹999.99 |
+| 5 | A: percentage values 50/30/10 | 400; percentages must add to 100 |
+| 6 | A: create ₹100 SHARES expense; shares 1:2 | 201; owed amounts ₹33.33 and ₹66.67 |
+| 7 | A/B are multiple payers contributing ₹6/₹4 to a ₹10 EQUAL expense | 201; total payer contribution equals total |
+| 8 | Payers contribute only ₹9 to a ₹10 expense | 400; payer amounts do not equal total |
+| 9 | Use a random/non-group member ID in `splits` | 400; member is not active in this group |
+| 10 | Repeat one member in `splits` | 400; duplicate member rejected |
+| 11 | Set amount to `10.123` | 400; maximum two decimal places |
+| 12 | Request group expense list without token, then as a non-member | 401; then 404 |
+| 13 | B: `GET /api/groups/:groupId/expenses` | 200; list, filtered total summary, and pagination |
+| 14 | Filter list with `?search=din&category=food&sortBy=amount&order=asc` | 200; matching results sorted ascending by amount |
+| 15 | Filter list with `?from=2026-10-01&to=2026-10-10` | 200; dates in the inclusive UTC range |
+| 16 | Filter with `?paidBy=<aMemberId>` and separately `?member=<cMemberId>` | 200; only matching expense records |
+| 17 | B: `GET /api/expenses/:expenseId` | 200; rupee amounts and member IDs returned |
+| 18 | Creator A: patch only `{ "description": "Dinner at Taj" }` | 200; financial values unchanged |
+| 19 | A: patch only `{ "amount": 200 }` | 400; all financial fields must be sent together |
+| 20 | A: patch amount/payers/split type/splits as one complete set | 200; totals recalculate and remain exact |
+| 21 | Non-admin B edits A's expense; then an admin tries the same edit | 403 for B; 200 for admin |
+| 22 | A: `DELETE /api/expenses/:expenseId`, then fetch/list it | 200; subsequent GET is 404 and list omits it |
+| 23 | A: multipart `POST /api/expenses/:expenseId/receipt`, field `receipt`, JPG | 200 with receipt URL |
+| 24 | Upload PDF, then upload an image larger than 5 MiB | Both return 400 |
+| 25 | Clear Cloudinary env settings and upload a receipt | 503; other expense endpoints remain available |
+| 26 | A: `DELETE /api/expenses/:expenseId/receipt` | 200; receipt URL is empty |
+| 27 | In Compass inspect an expense created for ₹1000.50 | Stored `amount` is integer `100050`; API returns `1000.5` |
+
+Placeholder merge verification: create an expense where a placeholder is payer/split participant, then call `POST /api/groups/:groupId/placeholders/:placeholderId/merge` as admin with `{ "memberId": "<targetMemberId>" }`. Check that all expense references now point to the target member and any duplicate target/placeholder rows were collapsed. A non-admin call must return 403. Transaction-backed tests require Atlas/replica-set MongoDB; live receipt upload requires valid Cloudinary credentials.
+
+The three requested largest-remainder examples were run and their outputs are covered by `src/tests/splitCalculator.test.js`: `[3334, 3333, 3333]`, `[3333, 6667]`, and `[49999, 30000, 20000]`. Unit coverage runs using `npm test` without MongoDB or Cloudinary.

@@ -23,6 +23,17 @@ export function errorHandler(error, _request, response, _next) {
     statusCode = 400;
     message = 'Malformed JSON request body';
     details = null;
+  } else if (error.name === 'MulterError') {
+    statusCode = 400;
+    message = error.code === 'LIMIT_FILE_SIZE' ? 'Image must be 5 MB or smaller' : error.message;
+    details = null;
+  } else if (error.name === 'ValidationError') {
+    statusCode = 400;
+    message = 'Resource validation failed';
+    details = Object.values(error.errors ?? {}).map((issue) => ({
+      field: issue.path,
+      message: issue.message
+    }));
   }
 
   if (statusCode >= 500) {
