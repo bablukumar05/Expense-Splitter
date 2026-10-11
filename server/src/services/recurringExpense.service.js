@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, timingSafeEqual } from 'node:crypto';
 import Expense from '../models/Expense.js';
 import Group from '../models/Group.js';
 import { User } from '../models/User.js';
@@ -7,6 +7,7 @@ import { AppError } from '../utils/AppError.js';
 import { fromPaise } from '../utils/money.js';
 import { prepareExpenseFinancials, createExpense } from './expense.service.js';
 import { logger } from '../utils/logger.js';
+import { env } from '../config/env.js';
 
 const LEASE_MS = 5 * 60 * 1000;
 
@@ -78,6 +79,57 @@ export async function deactivateRecurringExpense(recurringExpense, user, member)
   await recurringExpense.save();
 }
 
+export async function pauseRecurringExpense(recurringExpense, user, member) {
+  if (!recurringExpense.createdBy.equals(user._id) && member.role !== 'admin') {
+    throw new AppError('Only the creator or a group admin can pause this recurring expense', 403);
+  }
+  recurringExpense.isActive = false;
+  recurringExpense.leaseToken = null;
+  recurringExpense.leaseExpiresAt = null;
+  return recurringExpense.save();
+}
+
+export async function resumeRecurringExpense(recurringExpense, user, member) {
+  if (!recurringExpense.createdBy.equals(user._id) && member.role !== 'admin') {
+    throw new AppError('Only the creator or a group admin can resume this recurring expense', 403);
+  }
+  recurringExpense.isActive = true;
+  recurringExpense.failureCount = 0;
+  recurringExpense.lastError = null;
+  recurringExpense.leaseToken = null;
+  recurringExpense.leaseExpiresAt = null;
+  return recurringExpense.save();
+}
+
+export async function skipRecurringOccurrence(recurringExpense, user, member) {
+  if (!recurringExpense.createdBy.equals(user._id) && member.role !== 'admin') {
+    throw new AppError('Only the creator or a group admin can skip occurrences', 403);
+  }
+  recurringExpense.nextRunAt = nextRecurringDate(
+    recurringExpense.nextRunAt,
+    recurringExpense.frequency,
+    recurringExpense.anchorDay ?? recurringExpense.nextRunAt.getUTCDate()
+  );
+  return recurringExpense.save();
+}
+
+export async function runNowRecurringExpense(recurringExpense, user, member) {
+  if (!recurringExpense.createdBy.equals(user._id) && member.role !== 'admin') {
+    throw new AppError('Only the creator or a group admin can run this recurring expense', 403);
+  }
+  return processRecurringExpense(recurringExpense, new Date(Date.now() + 60000));
+}
+
+export function verifyTriggerSecret(providedSecret) {
+  const expectedSecret = env.RECURRING_TRIGGER_SECRET;
+  if (!expectedSecret) return false;
+  if (!providedSecret || typeof providedSecret !== 'string') return false;
+  const providedBuffer = Buffer.from(providedSecret);
+  const expectedBuffer = Buffer.from(expectedSecret);
+  if (providedBuffer.length !== expectedBuffer.length) return false;
+  return timingSafeEqual(providedBuffer, expectedBuffer);
+}
+
 function expenseRequestFromTemplate(recurringExpense, occurrenceAt) {
   return {
     description: recurringExpense.description,
@@ -101,66 +153,89 @@ function expenseRequestFromTemplate(recurringExpense, occurrenceAt) {
 }
 
 async function processRecurringExpense(candidate, now) {
-  const occurrenceAt = candidate.nextRunAt;
-  const leaseToken = randomUUID();
-  const claimed = await RecurringExpense.findOneAndUpdate({
-    _id: candidate._id,
-    isActive: true,
-    nextRunAt: occurrenceAt,
-    $or: [
-      { leaseExpiresAt: null },
-      { leaseExpiresAt: { $exists: false } },
-      { leaseExpiresAt: { $lte: now } }
-    ]
-  }, {
-    $set: { leaseToken, leaseExpiresAt: new Date(now.getTime() + LEASE_MS) }
-  }, { new: true }).select('+leaseToken +leaseExpiresAt');
-  if (!claimed) return false;
+  let processedOccurrences = 0;
+  const maxCatchUp = 12;
 
-  try {
-    const existing = await Expense.findOne({
-      recurringExpenseId: claimed._id,
-      recurringOccurrenceAt: occurrenceAt
-    });
-    if (!existing) {
-      const [group, user] = await Promise.all([
-        Group.findById(claimed.group),
-        User.findById(claimed.createdBy)
-      ]);
-      if (!group || !user || !group.findActiveMemberByUser(user._id)) {
-        await RecurringExpense.updateOne({ _id: claimed._id, leaseToken }, {
-          $set: { isActive: false, leaseToken: null, leaseExpiresAt: null }
-        });
-        logger.warn('Stopped recurring expense because its creator is no longer active', {
-          recurringExpenseId: String(claimed._id)
-        });
-        return false;
-      }
-      await createExpense(group, user, expenseRequestFromTemplate(claimed, occurrenceAt), {
+  while (processedOccurrences < maxCatchUp) {
+    const occurrenceAt = candidate.nextRunAt;
+    if (occurrenceAt > now) break;
+
+    const leaseToken = randomUUID();
+    const claimed = await RecurringExpense.findOneAndUpdate({
+      _id: candidate._id,
+      isActive: true,
+      nextRunAt: occurrenceAt,
+      $or: [
+        { leaseExpiresAt: null },
+        { leaseExpiresAt: { $exists: false } },
+        { leaseExpiresAt: { $lte: now } }
+      ]
+    }, {
+      $set: { leaseToken, leaseExpiresAt: new Date(now.getTime() + LEASE_MS) }
+    }, { new: true }).select('+leaseToken +leaseExpiresAt');
+    if (!claimed) break;
+
+    try {
+      const existing = await Expense.findOne({
         recurringExpenseId: claimed._id,
-        occurrenceAt
+        recurringOccurrenceAt: occurrenceAt
       });
-    }
-
-    await RecurringExpense.updateOne({ _id: claimed._id, leaseToken }, {
-      $set: {
-        lastRunAt: occurrenceAt,
-        nextRunAt: nextRecurringDate(occurrenceAt, claimed.frequency, claimed.anchorDay ?? occurrenceAt.getUTCDate()),
-        leaseToken: null,
-        leaseExpiresAt: null
+      if (!existing) {
+        const [group, user] = await Promise.all([
+          Group.findById(claimed.group),
+          User.findById(claimed.createdBy)
+        ]);
+        if (!group || !user || !group.findActiveMemberByUser(user._id)) {
+          await RecurringExpense.updateOne({ _id: claimed._id, leaseToken }, {
+            $set: { isActive: false, leaseToken: null, leaseExpiresAt: null, lastError: 'Creator is no longer an active member' }
+          });
+          logger.warn('Stopped recurring expense because its creator is no longer active', {
+            recurringExpenseId: String(claimed._id)
+          });
+          return processedOccurrences > 0;
+        }
+        await createExpense(group, user, expenseRequestFromTemplate(claimed, occurrenceAt), {
+          recurringExpenseId: claimed._id,
+          occurrenceAt
+        });
       }
-    });
-    return true;
-  } catch (error) {
-    await RecurringExpense.updateOne({ _id: claimed._id, leaseToken }, {
-      $set: { leaseToken: null, leaseExpiresAt: null }
-    });
-    logger.error('Recurring expense occurrence failed', {
-      recurringExpenseId: String(claimed._id),
-      message: error.message
-    });
-    return false;
+
+      const nextDate = nextRecurringDate(occurrenceAt, claimed.frequency, claimed.anchorDay ?? occurrenceAt.getUTCDate());
+      await RecurringExpense.updateOne({ _id: claimed._id, leaseToken }, {
+        $set: {
+          lastRunAt: occurrenceAt,
+          nextRunAt: nextDate,
+          failureCount: 0,
+          lastError: null,
+          leaseToken: null,
+          leaseExpiresAt: null
+        }
+      });
+      candidate.nextRunAt = nextDate;
+      processedOccurrences += 1;
+    } catch (error) {
+      const newFailureCount = (claimed.failureCount ?? 0) + 1;
+      const shouldAutoPause = newFailureCount >= 3;
+      await RecurringExpense.updateOne({ _id: claimed._id, leaseToken }, {
+        $set: {
+          failureCount: newFailureCount,
+          lastError: error.message,
+          ...(shouldAutoPause ? { isActive: false } : {}),
+          leaseToken: null,
+          leaseExpiresAt: null
+        }
+      });
+      logger.error('Recurring expense occurrence failed', {
+        recurringExpenseId: String(claimed._id),
+        failureCount: newFailureCount,
+        autoPaused: shouldAutoPause,
+        message: error.message
+      });
+      break;
+    }
   }
+
+  return processedOccurrences > 0;
 }
 
 export async function processDueRecurringExpenses(now = new Date()) {

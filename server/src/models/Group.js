@@ -38,7 +38,7 @@ const groupSchema = new mongoose.Schema({
   archivedAt: { type: Date, default: null }
 }, { timestamps: true });
 
-groupSchema.index({ 'members.user': 1 });
+groupSchema.index({ 'members.user': 1, isArchived: 1 });
 groupSchema.index({ 'invite.code': 1 }, { unique: true, sparse: true });
 
 groupSchema.methods.activeMembers = function activeMembers() {

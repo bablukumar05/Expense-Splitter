@@ -2,8 +2,7 @@ import { env } from '../config/env.js';
 import { sendEmail } from '../utils/sendEmail.js';
 
 export async function sendPasswordResetEmail(email, token) {
-  const resetUrl = new URL('/reset-password', env.FRONTEND_URL);
-  resetUrl.searchParams.set('token', token);
+  const resetUrl = new URL(`/reset-password/${encodeURIComponent(token)}`, env.FRONTEND_URL);
 
   await sendEmail({
     to: email,

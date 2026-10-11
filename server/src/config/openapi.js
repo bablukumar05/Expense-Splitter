@@ -49,6 +49,12 @@ export const openApiDocument = {
     '/health': {
       get: { summary: 'Health and MongoDB status', responses: { 200: { description: 'Healthy' }, 503: { description: 'Database unavailable' } } }
     },
+    '/health/live': {
+      get: { summary: 'Liveness probe (process uptime)', responses: { 200: { description: 'Alive' } } }
+    },
+    '/health/ready': {
+      get: { summary: 'Readiness probe (database ping)', responses: { 200: { description: 'Ready' }, 503: { description: 'Database ping failed' } } }
+    },
     '/auth/register': {
       post: {
         summary: 'Register a user',
@@ -226,8 +232,23 @@ export const openApiDocument = {
     '/invite/{inviteCode}/join': {
       post: { security: [{ bearerAuth: [] }], summary: 'Join group through invite', responses: { 200: { description: 'Joined group' }, 403: { description: 'Blocked from group' } } }
     },
+    '/recurring-expenses/trigger': {
+      post: { summary: 'Trigger due recurring expense execution (external scheduler)', responses: { 200: { description: 'Recurring job executed' }, 401: { description: 'Unauthorized' } } }
+    },
     '/recurring-expenses/{recurringExpenseId}': {
       delete: { security: [{ bearerAuth: [] }], summary: 'Stop recurring expense (creator or admin)', responses: { 200: { description: 'Recurring expense stopped' } } }
+    },
+    '/recurring-expenses/{recurringExpenseId}/pause': {
+      post: { security: [{ bearerAuth: [] }], summary: 'Pause recurring expense template', responses: { 200: { description: 'Recurring expense paused' } } }
+    },
+    '/recurring-expenses/{recurringExpenseId}/resume': {
+      post: { security: [{ bearerAuth: [] }], summary: 'Resume recurring expense template', responses: { 200: { description: 'Recurring expense resumed' } } }
+    },
+    '/recurring-expenses/{recurringExpenseId}/skip': {
+      post: { security: [{ bearerAuth: [] }], summary: 'Skip next occurrence of recurring expense', responses: { 200: { description: 'Occurrence skipped' } } }
+    },
+    '/recurring-expenses/{recurringExpenseId}/run-now': {
+      post: { security: [{ bearerAuth: [] }], summary: 'Immediately run next occurrence (test trigger)', responses: { 200: { description: 'Occurrence executed' } } }
     },
     '/expenses/{expenseId}': {
       get: { security: [{ bearerAuth: [] }], summary: 'Get expense', responses: { 200: { description: 'Expense' } } },

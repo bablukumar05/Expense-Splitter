@@ -29,3 +29,9 @@ export const resetPasswordRequest = {
   ...emptyRequest,
   body: z.object({ token: z.string().min(40).max(256), password: passwordSchema }).strict()
 };
+
+export const resetPasswordParamRequest = {
+  ...emptyRequest,
+  params: z.object({ token: z.string().min(40).max(256) }).strict(),
+  body: z.object({ password: passwordSchema }).strict()
+};

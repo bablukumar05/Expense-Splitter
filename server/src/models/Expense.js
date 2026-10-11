@@ -82,7 +82,6 @@ const expenseSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 expenseSchema.index({ group: 1, isDeleted: 1, date: -1 });
-expenseSchema.index({ group: 1, date: -1 });
 expenseSchema.index({ group: 1, 'paidBy.member': 1 });
 expenseSchema.index({ group: 1, 'splits.member': 1 });
 expenseSchema.index(

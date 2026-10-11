@@ -7,7 +7,7 @@ import * as activityController from '../controllers/activity.controller.js';
 import * as inviteController from '../controllers/invite.controller.js';
 import { authenticate } from '../middleware/auth.js';
 import { loadGroup, requireAdmin } from '../middleware/groupAccess.js';
-import { inviteLimiter } from '../middleware/rateLimiter.js';
+import { exportLimiter, inviteLimiter } from '../middleware/rateLimiter.js';
 import { validate } from '../middleware/validate.js';
 import {
   addMemberSchema,
@@ -59,7 +59,7 @@ router.post('/:groupId/settlements', validate(createSettlementSchema), loadGroup
 router.get('/:groupId/settlements', validate(listSettlementsSchema), loadGroup, settlementController.listSettlements);
 router.get('/:groupId/activity', validate(listActivitySchema), loadGroup, activityController.getActivity);
 router.get('/:groupId/stats', validate(groupStatsSchema), loadGroup, analyticsController.getGroupStats);
-router.get('/:groupId/export', validate(exportGroupSchema), loadGroup, exportController.exportGroup);
+router.get('/:groupId/export', exportLimiter, validate(exportGroupSchema), loadGroup, exportController.exportGroup);
 router.post('/:groupId/recurring-expenses', validate(createRecurringExpenseSchema), loadGroup, recurringController.createRecurringExpense);
 router.get('/:groupId/recurring-expenses', validate(listRecurringExpensesSchema), loadGroup, recurringController.listRecurringExpenses);
 

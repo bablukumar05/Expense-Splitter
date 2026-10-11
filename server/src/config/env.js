@@ -19,7 +19,12 @@ const envSchema = z.object({
   SMTP_FROM: z.string().optional(),
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
-  CLOUDINARY_API_SECRET: z.string().optional()
+  CLOUDINARY_API_SECRET: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().optional(),
+  RECURRING_TRIGGER_SECRET: z.string().optional(),
+  ENABLE_CRON: z.enum(['true', 'false']).default('true').transform((value) => value === 'true'),
+  ALLOW_PROD_SEED: z.enum(['true', 'false']).default('false').transform((value) => value === 'true')
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -42,6 +47,9 @@ export const env = {
 const isSmtpPlaceholder = (value) => /example\.(com|net|org)|your-smtp|replace-this|<[^>]+>/i.test(value ?? '');
 const smtpValues = [env.SMTP_HOST, env.SMTP_USER, env.SMTP_PASS, env.SMTP_FROM];
 
-export const isSmtpConfigured = Boolean(
-  env.SMTP_HOST && env.SMTP_PORT && env.SMTP_USER && env.SMTP_PASS && env.SMTP_FROM
-) && !smtpValues.some(isSmtpPlaceholder);
+export const isResendConfigured = Boolean(env.RESEND_API_KEY);
+export const isEmailConfigured = Boolean(
+  isResendConfigured ||
+  (env.SMTP_HOST && env.SMTP_PORT && env.SMTP_USER && env.SMTP_PASS && env.SMTP_FROM && !smtpValues.some(isSmtpPlaceholder))
+);
+export const isSmtpConfigured = isEmailConfigured;

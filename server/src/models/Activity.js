@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const activitySchema = new mongoose.Schema({
-  group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true, index: true },
+  group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true },
   actor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   actorName: { type: String, required: true, trim: true, maxlength: 80 },
   event: {

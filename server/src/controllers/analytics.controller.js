@@ -3,11 +3,11 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendSuccess } from '../utils/response.js';
 
 export const getGroupStats = asyncHandler(async (request, response) => {
-  const stats = await analyticsService.getGroupStats(request.group);
+  const stats = await analyticsService.getGroupStats(request.group, request.validated?.query || {});
   return sendSuccess(response, 200, 'Group statistics fetched', { stats });
 });
 
 export const getMyStats = asyncHandler(async (request, response) => {
-  const stats = await analyticsService.getUserStats(request.user._id);
+  const stats = await analyticsService.getUserStats(request.user._id, request.validated?.query || {});
   return sendSuccess(response, 200, 'Personal statistics fetched', { stats });
 });

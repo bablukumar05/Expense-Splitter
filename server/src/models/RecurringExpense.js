@@ -36,11 +36,13 @@ const recurringExpenseSchema = new mongoose.Schema({
   splits: { type: [recurringSplitSchema], required: true },
   frequency: { type: String, enum: ['weekly', 'monthly'], required: true },
   anchorDay: { type: Number, min: 1, max: 31, default: null },
-  nextRunAt: { type: Date, required: true, index: true },
+  nextRunAt: { type: Date, required: true },
   lastRunAt: { type: Date, default: null },
   leaseToken: { type: String, default: null, select: false },
   leaseExpiresAt: { type: Date, default: null, select: false },
-  isActive: { type: Boolean, default: true, index: true },
+  isActive: { type: Boolean, default: true },
+  failureCount: { type: Number, default: 0 },
+  lastError: { type: String, default: null },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 }, { timestamps: true });
 

@@ -18,12 +18,29 @@ import { logger } from './utils/logger.js';
 import swaggerUi from 'swagger-ui-express';
 import { openApiDocument } from './config/openapi.js';
 
+import { randomUUID } from 'node:crypto';
+
 const app = express();
-app.set("trust proxy", 1);
 
 app.disable('x-powered-by');
-app.set('trust proxy', env.NODE_ENV === 'production' ? 1 : false);
-app.use(helmet());
+app.set('trust proxy', 1);
+
+app.use((req, res, next) => {
+  req.id = req.headers['x-request-id'] || randomUUID();
+  res.setHeader('X-Request-Id', req.id);
+  next();
+});
+
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      'img-src': ["'self'", 'data:', 'https:'],
+      'script-src': ["'self'", "'unsafe-inline'"],
+      'style-src': ["'self'", "'unsafe-inline'"]
+    }
+  }
+}));
 app.use(cors({
   origin(origin, callback) {
     if (!origin || env.CORS_ORIGINS.includes(origin)) return callback(null, true);

@@ -15,8 +15,51 @@ function normalizeSubtotal(rows, targetCurrency) {
   }, 0);
 }
 
-export async function getGroupStats(group) {
+function fillMonthlyGaps(monthlyMap, fromDate, toDate) {
+  let startMonth;
+  let endMonth;
+
+  if (fromDate && toDate) {
+    const start = new Date(fromDate);
+    const end = new Date(toDate);
+    startMonth = `${start.getUTCFullYear()}-${String(start.getUTCMonth() + 1).padStart(2, '0')}`;
+    endMonth = `${end.getUTCFullYear()}-${String(end.getUTCMonth() + 1).padStart(2, '0')}`;
+  } else if (monthlyMap.size > 1) {
+    const sorted = [...monthlyMap.keys()].sort();
+    startMonth = sorted[0];
+    endMonth = sorted[sorted.length - 1];
+  }
+
+  if (startMonth && endMonth && startMonth <= endMonth) {
+    let [currY, currM] = startMonth.split('-').map(Number);
+    const [endY, endM] = endMonth.split('-').map(Number);
+    let iterations = 0;
+    while ((currY < endY || (currY === endY && currM <= endM)) && iterations < 36) {
+      const key = `${currY}-${String(currM).padStart(2, '0')}`;
+      if (!monthlyMap.has(key)) {
+        monthlyMap.set(key, 0);
+      }
+      currM += 1;
+      if (currM > 12) {
+        currM = 1;
+        currY += 1;
+      }
+      iterations += 1;
+    }
+  }
+}
+
+export async function getGroupStats(group, options = {}) {
+  const { fromDate, toDate, category, timezone = 'Asia/Kolkata' } = options;
   const match = expenseMatch(group._id);
+
+  if (category) match.category = category;
+  if (fromDate || toDate) {
+    match.date = {};
+    if (fromDate) match.date.$gte = new Date(fromDate);
+    if (toDate) match.date.$lte = new Date(toDate);
+  }
+
   const [totals, categoryRows, monthRows, memberRows, payerRows, expenseCount] = await Promise.all([
     Expense.aggregate([
       { $match: match },
@@ -24,12 +67,12 @@ export async function getGroupStats(group) {
     ]),
     Expense.aggregate([
       { $match: match },
-      { $group: { _id: { category: '$category', currency: '$currency' }, total: { $sum: '$amount' } } }
+      { $group: { _id: { category: '$category', currency: '$currency' }, total: { $sum: '$amount' }, count: { $sum: 1 } } }
     ]),
     Expense.aggregate([
       { $match: match },
       { $group: {
-        _id: { month: { $dateToString: { format: '%Y-%m', date: '$date', timezone: 'UTC' } }, currency: '$currency' },
+        _id: { month: { $dateToString: { format: '%Y-%m', date: '$date', timezone } }, currency: '$currency' },
         total: { $sum: '$amount' }
       } }
     ]),
@@ -46,11 +89,30 @@ export async function getGroupStats(group) {
     Expense.countDocuments(match)
   ]);
 
+  let largestExpense = null;
+  if (Expense.db?.readyState === 1) {
+    try {
+      const doc = await Expense.findOne(match).sort({ amount: -1 }).select('description amount currency date category');
+      if (doc) {
+        largestExpense = {
+          description: doc.description,
+          amount: fromPaise(convertPaise(doc.amount, doc.currency, group.currency)),
+          date: doc.date,
+          category: doc.category
+        };
+      }
+    } catch {
+      // non-fatal
+    }
+  }
+
   const spendByCategory = new Map();
+  const categoryCounts = new Map();
   for (const row of categoryRows) {
-    const category = row._id.category;
+    const cat = row._id.category;
     const converted = convertPaise(row.total, row._id.currency, group.currency);
-    spendByCategory.set(category, (spendByCategory.get(category) ?? 0) + converted);
+    spendByCategory.set(cat, (spendByCategory.get(cat) ?? 0) + converted);
+    categoryCounts.set(cat, (categoryCounts.get(cat) ?? 0) + (row.count ?? 1));
   }
 
   const monthlyTotals = new Map();
@@ -59,6 +121,8 @@ export async function getGroupStats(group) {
     const converted = convertPaise(row.total, row._id.currency, group.currency);
     monthlyTotals.set(month, (monthlyTotals.get(month) ?? 0) + converted);
   }
+
+  fillMonthlyGaps(monthlyTotals, fromDate, toDate);
 
   const spendPerMemberTotals = new Map();
   for (const row of memberRows) {
@@ -76,15 +140,43 @@ export async function getGroupStats(group) {
 
   const topSpenderEntry = [...topSpenderTotals].sort((first, second) => second[1] - first[1])[0];
   const totalPaise = normalizeSubtotal(totals, group.currency);
+  const totalSpend = fromPaise(totalPaise);
+  const averageExpense = expenseCount > 0 ? Number((totalSpend / expenseCount).toFixed(2)) : 0;
+
+  const membersList = Array.isArray(group.members) ? group.members : [];
+  const memberBreakdown = membersList.map((member) => {
+    const memberId = String(member._id);
+    const paidPaise = topSpenderTotals.get(memberId) ?? 0;
+    const sharePaise = spendPerMemberTotals.get(memberId) ?? 0;
+    const netPaise = paidPaise - sharePaise;
+    const name = member.isActive ? member.name : `${member.name} (left)`;
+    return {
+      member: memberId,
+      name,
+      paid: fromPaise(paidPaise),
+      share: fromPaise(sharePaise),
+      net: fromPaise(netPaise),
+      isActive: Boolean(member.isActive)
+    };
+  }).sort((first, second) => second.paid - first.paid);
 
   return {
     groupId: group._id,
     groupName: group.name,
     currency: group.currency,
-    totalSpend: fromPaise(totalPaise),
+    totalSpend,
     expenseCount,
+    averageExpense,
+    largestExpense,
     spendByCategory: [...spendByCategory]
-      .map(([category, amount]) => ({ category, amount: fromPaise(amount) }))
+      .map(([cat, amount]) => ({ category: cat, amount: fromPaise(amount) }))
+      .sort((first, second) => second.amount - first.amount),
+    categoryBreakdown: [...spendByCategory]
+      .map(([cat, amount]) => ({
+        category: cat,
+        amount: fromPaise(amount),
+        count: categoryCounts.get(cat) ?? 0
+      }))
       .sort((first, second) => second.amount - first.amount),
     spendPerMember: [...spendPerMemberTotals]
       .map(([memberId, amount]) => ({
@@ -93,6 +185,7 @@ export async function getGroupStats(group) {
         amount: fromPaise(amount)
       }))
       .sort((first, second) => second.amount - first.amount),
+    memberBreakdown,
     monthlyTrend: [...monthlyTotals]
       .sort(([first], [second]) => first.localeCompare(second))
       .map(([month, amount]) => ({ month, amount: fromPaise(amount) })),
@@ -104,13 +197,14 @@ export async function getGroupStats(group) {
   };
 }
 
-export async function getUserStats(userId) {
+export async function getUserStats(userId, options = {}) {
+  const { timezone = 'Asia/Kolkata' } = options;
   const groups = await Group.find({
     isArchived: false,
     members: { $elemMatch: { user: userId, isActive: true } }
   }).select('name currency members');
 
-  if (groups.length === 0) return { summary: {}, groups: [], monthlyTrend: [] };
+  if (groups.length === 0) return { summary: {}, groups: [], monthlyTrend: [], categoryBreakdown: [] };
 
   const memberPairs = groups.map((group) => ({
     group,
@@ -119,7 +213,7 @@ export async function getUserStats(userId) {
   const memberIds = memberPairs.map(({ member }) => member._id);
   const groupById = new Map(memberPairs.map(({ group }) => [String(group._id), group]));
 
-  const [spendRows, monthRows] = await Promise.all([
+  const [spendRows, payerRows, monthRows, categoryRows] = await Promise.all([
     Expense.aggregate([
       { $match: { group: { $in: groups.map((group) => group._id) }, isDeleted: false } },
       { $unwind: '$splits' },
@@ -131,13 +225,34 @@ export async function getUserStats(userId) {
     ]),
     Expense.aggregate([
       { $match: { group: { $in: groups.map((group) => group._id) }, isDeleted: false } },
+      { $unwind: '$paidBy' },
+      { $match: { 'paidBy.member': { $in: memberIds } } },
+      { $group: {
+        _id: { group: '$group', currency: '$currency' },
+        total: { $sum: '$paidBy.amount' }
+      } }
+    ]),
+    Expense.aggregate([
+      { $match: { group: { $in: groups.map((group) => group._id) }, isDeleted: false } },
       { $unwind: '$splits' },
       { $match: { 'splits.member': { $in: memberIds } } },
       { $group: {
         _id: {
           group: '$group',
           currency: '$currency',
-          month: { $dateToString: { format: '%Y-%m', date: '$date', timezone: 'UTC' } }
+          month: { $dateToString: { format: '%Y-%m', date: '$date', timezone } }
+        },
+        total: { $sum: '$splits.owedAmount' }
+      } }
+    ]),
+    Expense.aggregate([
+      { $match: { group: { $in: groups.map((group) => group._id) }, isDeleted: false } },
+      { $unwind: '$splits' },
+      { $match: { 'splits.member': { $in: memberIds } } },
+      { $group: {
+        _id: {
+          category: '$category',
+          currency: '$currency'
         },
         total: { $sum: '$splits.owedAmount' }
       } }
@@ -146,6 +261,8 @@ export async function getUserStats(userId) {
 
   const groupTotals = new Map();
   const currencyTotals = new Map();
+  const currencyPaidTotals = new Map();
+
   for (const row of spendRows) {
     const group = groupById.get(String(row._id.group));
     if (!group) continue;
@@ -153,6 +270,13 @@ export async function getUserStats(userId) {
     const groupId = String(group._id);
     groupTotals.set(groupId, (groupTotals.get(groupId) ?? 0) + converted);
     currencyTotals.set(group.currency, (currencyTotals.get(group.currency) ?? 0) + converted);
+  }
+
+  for (const row of payerRows) {
+    const group = groupById.get(String(row._id.group));
+    if (!group) continue;
+    const converted = convertPaise(row.total, row._id.currency, group.currency);
+    currencyPaidTotals.set(group.currency, (currencyPaidTotals.get(group.currency) ?? 0) + converted);
   }
 
   const monthly = new Map();
@@ -164,9 +288,20 @@ export async function getUserStats(userId) {
     monthly.set(key, (monthly.get(key) ?? 0) + converted);
   }
 
+  const categoryShare = new Map();
+  for (const row of categoryRows) {
+    const key = `${row._id.currency}:${row._id.category}`;
+    categoryShare.set(key, (categoryShare.get(key) ?? 0) + row.total);
+  }
+
   return {
-    summary: Object.fromEntries([...currencyTotals].map(([currency, amount]) => [currency, {
+    summary: Object.fromEntries([...currencyTotals].map(([curr, amount]) => [curr, {
       totalSpend: fromPaise(amount)
+    }])),
+    userTotals: Object.fromEntries([...currencyTotals].map(([curr, amount]) => [curr, {
+      totalSpend: fromPaise(amount),
+      totalPaid: fromPaise(currencyPaidTotals.get(curr) ?? 0),
+      net: fromPaise((currencyPaidTotals.get(curr) ?? 0) - amount)
     }])),
     groups: memberPairs.map(({ group }) => ({
       groupId: group._id,
@@ -179,6 +314,11 @@ export async function getUserStats(userId) {
       .map(([key, amount]) => {
         const separator = key.indexOf(':');
         return { currency: key.slice(0, separator), month: key.slice(separator + 1), spend: fromPaise(amount) };
+      }),
+    categoryBreakdown: [...categoryShare]
+      .map(([key, amount]) => {
+        const separator = key.indexOf(':');
+        return { currency: key.slice(0, separator), category: key.slice(separator + 1), spend: fromPaise(amount) };
       })
   };
 }

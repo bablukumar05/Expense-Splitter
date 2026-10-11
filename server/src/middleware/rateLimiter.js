@@ -13,6 +13,22 @@ export const authRateLimiter = rateLimit({
   }
 });
 
+export const authLimiter = authRateLimiter;
+
+// Login: sirf FAILED attempts count hote hain
+export const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many failed attempts, try again in 15 minutes',
+    data: null
+  }
+});
+
 export const inviteLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 30,
@@ -33,6 +49,18 @@ export const commentLimiter = rateLimit({
   message: {
     success: false,
     message: 'You are commenting too fast. Please slow down.',
+    data: null
+  }
+});
+
+export const exportLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many export requests. Please wait a few minutes before trying again.',
     data: null
   }
 });

@@ -25,8 +25,10 @@ export const logout = asyncHandler(async (request, response) => {
 
 export const me = asyncHandler(async (request, response) => {
   const { id, name, email, avatar, defaultCurrency, createdAt } = request.user;
+  const user = { id, name, email, avatar, defaultCurrency, createdAt };
   return sendSuccess(response, 200, 'Current user retrieved successfully', {
-    id, name, email, avatar, defaultCurrency, createdAt
+    ...user,
+    user
   });
 });
 
@@ -36,7 +38,8 @@ export const forgotPassword = asyncHandler(async (request, response) => {
 });
 
 export const resetPassword = asyncHandler(async (request, response) => {
-  const { token, password } = request.validated.body;
+  const token = request.validated.params?.token || request.validated.body?.token || request.params.token;
+  const { password } = request.validated.body;
   await authService.resetPassword(token, password);
   return sendSuccess(response, 200, 'Password reset successfully', null);
 });

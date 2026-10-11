@@ -7,6 +7,16 @@ import { recurringExpenseIdSchema } from '../validators/recurringExpenseId.valid
 
 const router = Router();
 
-router.delete('/:recurringExpenseId', authenticate, validate(recurringExpenseIdSchema), loadRecurringExpense, recurringController.deactivateRecurringExpense);
+// External trigger endpoint for free tier / external schedulers (protected by X-Trigger-Secret)
+router.post('/trigger', recurringController.triggerRecurringJob);
+
+// Protected endpoints for managing individual recurring expense templates
+router.use('/:recurringExpenseId', authenticate, validate(recurringExpenseIdSchema), loadRecurringExpense);
+
+router.delete('/:recurringExpenseId', recurringController.deactivateRecurringExpense);
+router.post('/:recurringExpenseId/pause', recurringController.pauseRecurringExpense);
+router.post('/:recurringExpenseId/resume', recurringController.resumeRecurringExpense);
+router.post('/:recurringExpenseId/skip', recurringController.skipRecurringExpense);
+router.post('/:recurringExpenseId/run-now', recurringController.runNowRecurringExpense);
 
 export default router;

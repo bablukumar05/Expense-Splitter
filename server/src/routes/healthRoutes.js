@@ -14,4 +14,29 @@ router.get('/', validate(emptyRequest), (_request, response) => {
   });
 });
 
+router.get('/live', validate(emptyRequest), (_request, response) => {
+  return response.status(200).json({
+    success: true,
+    message: 'Service is alive',
+    data: { status: 'ok', uptime: process.uptime() }
+  });
+});
+
+router.get('/ready', validate(emptyRequest), async (_request, response) => {
+  let isDbReady = false;
+  try {
+    if (mongoose.connection.readyState === 1 && mongoose.connection.db) {
+      await mongoose.connection.db.admin().ping();
+      isDbReady = true;
+    }
+  } catch {
+    isDbReady = false;
+  }
+  return response.status(isDbReady ? 200 : 503).json({
+    success: isDbReady,
+    message: isDbReady ? 'Service is ready' : 'Database ping failed',
+    data: { status: isDbReady ? 'ready' : 'unavailable', database: isDbReady ? 'connected' : 'disconnected' }
+  });
+});
+
 export default router;
