@@ -92,7 +92,7 @@ export async function logout(refreshToken) {
 }
 
 export async function requestPasswordReset(email, sendResetEmail) {
-  if (!env.SMTP_HOST || !env.SMTP_PORT || !env.SMTP_USER || !env.SMTP_PASS || !env.SMTP_FROM) {
+  if (env.NODE_ENV === 'production' && !env.SMTP_HOST && !env.RESEND_API_KEY) {
     throw new AppError('Password reset email is not configured', 503);
   }
 

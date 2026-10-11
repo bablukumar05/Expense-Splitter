@@ -18,7 +18,13 @@ function getTransporter() {
 }
 
 export async function sendEmail({ to, subject, text, html }) {
-  if (!isEmailConfigured) throw new AppError('Email delivery is not configured', 503);
+  if (!isEmailConfigured) {
+    if (env.NODE_ENV === 'development' || env.NODE_ENV === 'test') {
+      console.log(`\n========================================\n[DEV EMAIL SIMULATION]\nTo: ${to}\nSubject: ${subject}\n${text}\n========================================\n`);
+      return { simulated: true };
+    }
+    throw new AppError('Email delivery is not configured', 503);
+  }
 
   if (isResendConfigured) {
     const fromAddress = env.EMAIL_FROM || env.SMTP_FROM || 'Expense Splitter <onboarding@resend.dev>';
