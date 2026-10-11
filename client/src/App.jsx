@@ -4,14 +4,24 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import ServerStatusBanner from "@/components/ServerStatusBanner";
 import AppToaster from "@/components/ui/Toaster";
 import AuthProvider from "@/features/auth/AuthProvider";
+import { useAuth } from "@/features/auth/useAuth";
 import Dashboard from "@/pages/Dashboard";
 import DesignPreview from "@/pages/DesignPreview";
 import ForgotPassword from "@/pages/ForgotPassword";
 import JoinPlaceholder from "@/pages/JoinPlaceholder";
+import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
 import Register from "@/pages/Register";
 import ResetPassword from "@/pages/ResetPassword";
+
+function HomeRoute() {
+  const { status } = useAuth();
+  if (status === "authenticated") {
+    return <Dashboard />;
+  }
+  return <Landing />;
+}
 
 export default function App() {
   return (
@@ -19,6 +29,10 @@ export default function App() {
       <AuthProvider>
         <ServerStatusBanner />
         <Routes>
+          {/* Public Home & Landing */}
+          <Route path="/" element={<HomeRoute />} />
+          <Route path="/landing" element={<Landing />} />
+
           {/* Sirf logged-out users */}
           <Route element={<GuestRoute />}>
             <Route path="/login" element={<Login />} />
@@ -33,7 +47,7 @@ export default function App() {
 
           {/* Login zaroori */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/join/:code" element={<JoinPlaceholder />} />
           </Route>
 

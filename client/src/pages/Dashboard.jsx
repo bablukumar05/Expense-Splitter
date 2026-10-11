@@ -50,6 +50,9 @@ export default function Dashboard() {
             <Button size="sm" variant="secondary" onClick={callMe}>
               Call /auth/me
             </Button>
+            <Link to="/landing" className="text-sm text-violet-300 hover:underline">
+              Landing page
+            </Link>
             <Link to="/design" className="text-sm text-violet-300 hover:underline">
               Design preview
             </Link>
