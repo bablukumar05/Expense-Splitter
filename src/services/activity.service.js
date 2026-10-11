@@ -1,6 +1,7 @@
 import Activity from '../models/Activity.js';
+import { logger } from '../utils/logger.js';
 
-export async function logActivity({
+export function logActivity({
   groupId,
   actorId = null,
   actorName,
@@ -25,21 +26,39 @@ export async function logActivity({
     targetName,
     metadata
   });
-  return session ? activity.save({ session }) : activity.save();
+  if (session) return activity.save({ session });
+
+  activity.save().catch((error) => {
+    logger.error('Failed to write activity log', { message: error.message, groupId: String(groupId) });
+  });
+  return Promise.resolve(null);
 }
 
-export async function listActivity(groupId, { page, limit }) {
+export async function listActivity(groupId, { before, page, limit }) {
   const filter = { group: groupId };
-  const [activities, total] = await Promise.all([
-    Activity.find(filter)
-      .sort({ createdAt: -1, _id: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit),
-    Activity.countDocuments(filter)
-  ]);
+  const cursorMode = before !== undefined || page === undefined;
+  if (before) filter._id = { $lt: before };
+
+  const query = Activity.find(filter)
+    .sort({ _id: -1 })
+    .limit(limit + 1);
+  if (!cursorMode) query.skip((page - 1) * limit);
+
+  const rows = await query;
+  const hasMore = rows.length > limit;
+  const activities = rows.slice(0, limit);
+  const result = {
+    activities,
+    hasMore,
+    nextCursor: hasMore ? activities[activities.length - 1]._id : null
+  };
+
+  if (cursorMode) return result;
+
+  const total = await Activity.countDocuments(filter);
 
   return {
-    activities,
+    ...result,
     pagination: { page, limit, total, pages: Math.ceil(total / limit) }
   };
 }

@@ -6,6 +6,7 @@ import { sendEmail } from '../utils/sendEmail.js';
 import { countUserGroups } from './group.service.js';
 import { logActivity } from './activity.service.js';
 import { notificationQueue } from './notificationQueue.js';
+import { notifyMemberJoined } from './notification.service.js';
 
 const buildLink = (code) => new URL(`/join/${code}`, env.FRONTEND_URL).toString();
 
@@ -84,12 +85,12 @@ export async function inviteByEmail(group, inviter, email) {
     entityId: currentGroup._id
   });
 
-  notificationQueue.enqueue(() => sendEmail({
+  notificationQueue.enqueue({
     to: email,
     subject: `${safeHeader(inviter.name)} invited you to "${safeHeader(currentGroup.name)}"`,
     text: `${inviter.name} invited you to join ${currentGroup.name} on Expense Splitter. Join: ${link}`,
     html: `<p>${escapedInviter} invited you to join <b>${escapedName}</b> on Expense Splitter.</p><p><a href="${escapedLink}">Join the group</a></p>`
-  }));
+  });
 }
 
 function assertInviteActive(group) {
@@ -213,14 +214,7 @@ export async function joinViaInvite(user, code) {
     metadata: { source: 'invite' }
   });
 
-  if (user.email) {
-    notificationQueue.enqueue(() => sendEmail({
-      to: user.email,
-      subject: `You joined ${updated.name}`,
-      text: `You joined ${updated.name} on Expense Splitter.`,
-      html: `<p>You joined <b>${escapeHtml(updated.name)}</b> on Expense Splitter.</p>`
-    }));
-  }
+  void notifyMemberJoined(updated, user);
 
   return updated;
 }

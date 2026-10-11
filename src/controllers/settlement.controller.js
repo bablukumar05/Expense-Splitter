@@ -9,12 +9,26 @@ export const createSettlement = asyncHandler(async (request, response) => {
     request.user,
     request.validated.body
   );
-  return sendSuccess(response, 201, 'Settlement recorded', { settlement });
+  const view = {
+    ...settlement.toJSON(),
+    fromName: request.group.members.id(settlement.from)?.name ?? 'Unknown',
+    toName: request.group.members.id(settlement.to)?.name ?? 'Unknown'
+  };
+  return sendSuccess(response, 201, 'Settlement recorded', { settlement: view });
 });
 
 export const listSettlements = asyncHandler(async (request, response) => {
   const data = await settlementService.listSettlements(request.group, request.validated.query);
   return sendSuccess(response, 200, 'Settlements fetched', data);
+});
+
+export const getSettlement = asyncHandler(async (request, response) => {
+  const settlement = {
+    ...request.settlement.toJSON(),
+    fromName: request.group.members.id(request.settlement.from)?.name ?? 'Unknown',
+    toName: request.group.members.id(request.settlement.to)?.name ?? 'Unknown'
+  };
+  return sendSuccess(response, 200, 'Settlement fetched', { settlement });
 });
 
 export const deleteSettlement = asyncHandler(async (request, response) => {

@@ -81,7 +81,7 @@ export async function updateGroup(group, changes) {
 }
 
 export async function archiveGroup(group) {
-  if (await groupHasUnsettledBalances(group._id)) {
+  if (await groupHasUnsettledBalances(group._id, group.currency)) {
     throw new AppError('Settle all balances before deleting the group', 400);
   }
   group.isArchived = true;
@@ -110,7 +110,7 @@ export async function removeMember(group, memberId, actorMember, block = false) 
     const activeAdmins = group.activeMembers().filter((activeMember) => activeMember.role === 'admin');
     if (activeAdmins.length <= 1) throw new AppError('Group must have at least one admin', 400);
   }
-  if ((await getMemberNetBalance(group._id, member._id)) !== 0) {
+  if ((await getMemberNetBalance(group._id, member._id, group.currency)) !== 0) {
     throw new AppError('Member has an unsettled balance. Settle up first.', 400);
   }
 
@@ -156,7 +156,7 @@ export async function changeRole(group, memberId, role) {
 }
 
 export async function leaveGroup(group, member) {
-  if ((await getMemberNetBalance(group._id, member._id)) !== 0) {
+  if ((await getMemberNetBalance(group._id, member._id, group.currency)) !== 0) {
     throw new AppError('You have an unsettled balance. Settle up before leaving.', 400);
   }
 

@@ -11,3 +11,11 @@ export function fromPaise(paise) {
   }
   return paise / 100;
 }
+
+export function formatMoney(paise, currency = 'INR') {
+  try {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(paise / 100);
+  } catch {
+    return `${currency} ${(paise / 100).toFixed(2)}`;
+  }
+}

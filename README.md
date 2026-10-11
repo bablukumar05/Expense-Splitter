@@ -1,19 +1,59 @@
 # Expense Splitter API
 
-Phase 1 provides the Express/Mongoose foundation and account authentication. All money-related functionality is intentionally deferred to later phases; monetary values in future APIs must be represented as integer paise.
+## Features
 
-## Requirements
+- JWT access/refresh authentication, password reset, rate limiting, and validation on every route.
+- Groups with account members, placeholders, invite links, activity history, and expense comments.
+- Expenses with equal/exact/percentage/shares splits, multiple payers, CSV/PDF exports, and Cloudinary receipts.
+- Derived balances, settle-up plans, settlements, analytics, and weekly/monthly recurring expenses.
+- All stored monetary amounts are integer paise. API boundaries accept/return decimal rupees.
 
-- Node.js 20 or newer
-- MongoDB Atlas (or a compatible MongoDB deployment)
-- SMTP credentials for password-reset email delivery
+## Tech Stack
 
-## Run locally
+Node.js 20+, Express 4, MongoDB/Mongoose, JWT, bcrypt, Zod, Jest, Node's test runner, Supertest, Nodemailer, Cloudinary, PDFKit, node-cron, and Swagger UI.
 
-1. Run `npm install`.
-2. Copy `.env.example` to `.env` and set `MONGO_URI`, a random `JWT_ACCESS_SECRET` of at least 32 characters, and SMTP settings.
-3. Run `npm run dev`.
-4. The API listens on `http://localhost:5000` by default. `GET /api/health` reports whether MongoDB is connected.
+## API Summary
+
+- `/api/auth` and `/api/users`: registration, login, profile, password, personal balance/statistics.
+- `/api/groups`: group/member/invite management, expenses, settlements, activity, balances, analytics, exports, and recurring templates.
+- `/api/expenses`: expense details, receipts, and comments.
+- `/api/settlements`: undo a settlement.
+- `/api/invite`: public invite preview and authenticated join.
+- `/api/docs`: interactive Swagger/OpenAPI documentation.
+
+## Folder Structure
+
+```text
+src/
+	config/       database, env, exchange rates, Cloudinary, OpenAPI
+	controllers/  thin HTTP handlers
+	jobs/         recurring expense scheduler
+	middleware/   auth, validation, access, upload, rate limits, errors
+	models/       users, groups, expenses, settlements, activity, recurrence
+	routes/       versionless /api route modules
+	scripts/      demo-data seed
+	services/     business logic, analytics, notifications, exports
+	tests/        Node, Jest, and optional Supertest tests
+	utils/        money, splitting, debt simplification, email helpers
+	validators/   Zod schemas
+```
+
+## Run Locally
+
+1. Run `npm ci`.
+2. Edit the ignored `.env` file; set `MONGO_URI` to MongoDB Atlas or a local replica set, and set a random `JWT_ACCESS_SECRET` of 32+ characters.
+3. Configure SMTP to send email and Cloudinary to upload receipts. Both integrations are optional until those features are used.
+4. Run `npm run dev`; the API defaults to `http://localhost:5000`.
+5. Run `npm run seed` to create demo users, a group, and sample expenses. Demo logins use `asha.demo@example.com`, `bala.demo@example.com`, `charu.demo@example.com`, password `DemoPass123`.
+6. Open `http://localhost:5000/api/docs` for Swagger UI.
+
+Run all unit suites with `npm test`. The Supertest flow runs with `npm run test:integration` when `TEST_MONGO_URI` is set to a disposable replica-set database; otherwise it is reported as skipped. Integration cleanup removes test records from that database, so do not point it at production data.
+
+Run the app and a single-node MongoDB replica set locally using `docker compose up --build` after configuring `.env`. The compose file starts MongoDB with replica-set transactions enabled.
+
+### Debt Simplification
+
+Balances use positive values for creditors and negative values for debtors. `simplifyDebts` uses a max-heap for each side, repeatedly matching the largest debtor with the largest creditor and transferring the smaller outstanding amount. At least one side reaches zero on every transfer, so a plan uses at most `n - 1` transfers for `n` non-zero balances. The greedy plan runs in `O(n log n)` and is deterministic, but it does not promise a globally minimal solution; finding the true minimum is computationally hard. Money stays integer paise throughout the algorithm.
 
 Never commit `.env`. The API returns access and refresh tokens in JSON; clients should keep refresh tokens in secure platform storage and send them only over HTTPS outside local development.
 
@@ -290,12 +330,13 @@ Settlement effects are unit-tested via the corrected balance formula and will be
 
 | Method | Path | Access | Purpose |
 | --- | --- | --- | --- |
-| POST | `/api/groups/:groupId/settlements` | Active group member; payer must be caller | Record a payment between two active group members |
-| GET | `/api/groups/:groupId/settlements` | Active group member | Paginated history; supports `from`, `to`, and `method` filters |
+| POST | `/api/groups/:groupId/settlements` | Active group member involved in the payment, or admin | Record a payment between two active group members |
+| GET | `/api/groups/:groupId/settlements` | Active group member | Paginated history; supports member, date, payer, receiver, and method filters |
+| GET | `/api/settlements/:settlementId` | Active group member | Fetch one settlement with member names |
 | DELETE | `/api/settlements/:settlementId` | Settlement creator or group admin | Undo via soft deletion; recalculates balances automatically |
-| GET | `/api/groups/:groupId/activity` | Active group member | Paginated group activity newest-first |
+| GET | `/api/groups/:groupId/activity?limit=20&before=:cursor` | Active group member | Cursor-paginated group activity, newest-first |
 | POST | `/api/expenses/:expenseId/comments` | Active group member | Add a comment |
-| GET | `/api/expenses/:expenseId/comments` | Active group member | Read comments in chronological order |
+| GET | `/api/expenses/:expenseId/comments?limit=20&after=:cursor` | Active group member | Cursor-paginated comments in chronological order |
 | DELETE | `/api/expenses/:expenseId/comments/:commentId` | Comment author or group admin | Delete a comment |
 
 Settlement request example (amount is rupees at the API boundary):
@@ -311,15 +352,15 @@ POST /api/groups/:groupId/settlements
 }
 ```
 
-The payer must be the authenticated member, both IDs must identify active members of this group, the payer must have a negative balance, and the recipient must have a positive balance. The amount is stored as integer paise and cannot exceed the smaller of the debtor's outstanding amount and the creditor's receivable. A per-group `balanceRevision` write inside the MongoDB transaction serializes concurrent settlements and balance-changing expense writes; conditional updates retry/fail rather than accepting an over-settlement. Existing groups without this field are supported. Undo sets settlement `status` to `void`, marks it deleted, and lets the aggregate recalculate the balances.
+The authenticated member must be one of the payment parties, unless they are a group admin. Both IDs must identify active members of this group, the payer must have a negative balance, and the recipient must have a positive balance. The amount is stored as integer paise and cannot exceed the smaller of the debtor's outstanding amount and the creditor's receivable. A per-group `balanceRevision` write inside the MongoDB transaction serializes concurrent settlements and balance-changing expense writes; conditional updates retry/fail rather than accepting an over-settlement. Existing groups without this field are supported. Undo sets settlement `status` to `void`, records who undid it, marks it deleted, and lets the aggregate recalculate the balances. Undo is blocked after either party leaves.
 
-Settlement creation/undo, expense create/update/delete, and their activity records run in MongoDB transactions. The notification sender is an in-process asynchronous queue: it does not wait for SMTP before returning the API response, catches/logs delivery failures, and continues draining later jobs. It is queue-like, not durable; pending mail can be lost if the process exits. Configure the existing SMTP variables to deliver invitation, group-join, expense-involvement, and settlement-received emails.
+Settlement creation/undo and expense create/update/delete run in MongoDB transactions. Activity records are fire-and-forget and cannot fail the business operation. The notification sender is an in-process asynchronous queue with three attempts and backoff; it does not wait for SMTP before returning the API response. It is not durable, so pending mail can be lost if the process exits. Placeholder SMTP values count as unconfigured. Configure valid SMTP values to deliver invitation, group-join, expense-involvement, and settlement emails. Users can opt out with `PATCH /api/users/me` and `{ "emailNotifications": false }`.
 
-Activity records include event key, actor name/ID, message, entity reference, target member where relevant, metadata, and timestamp. Events include invite sent, joined via invite, member removed, expense added/deleted/commented, settlement recorded, and settlement undone. Expense comments are embedded in the expense document; only the author or a group admin can delete them.
+Activity records include event key, actor name/ID, message, entity reference, target member where relevant, metadata, and timestamp. Events include group creation/update, placeholder/member/role changes, invite changes, expense add/update/delete/comment, and settlement record/undo. Activity and comments use exclusive `_id` cursors; comments are limited to 500 characters, soft-deleted, and rate-limited to 30 creates per minute. Expense comments remain embedded in the expense document; only the author or a group admin can delete them.
 
 ### Postman verification
 
-Use the Phase 4 A/B/C group and existing expenses that yield A `+1700`, B `-400`, and C `-1300`. Use embedded group-member IDs. A settlement must be made by its `from` member.
+Use the Phase 4 A/B/C group and existing expenses that yield A `+1700`, B `-400`, and C `-1300`. Use embedded group-member IDs. A settlement must be made by a payment party or an admin.
 
 | # | Request | Expected |
 | --- | --- | --- |
@@ -327,7 +368,7 @@ Use the Phase 4 A/B/C group and existing expenses that yield A `+1700`, B `-400`
 | 2 | Refresh group balances and simplify plan | C becomes 0; A's net receivable drops by ₹1300; corresponding transfer disappears |
 | 3 | A: `GET /api/groups/:groupId/settlements` | 200; settlement appears with pagination |
 | 4 | C pays A ₹1200, then tries another ₹101 while only ₹100 remains | First returns 201; second returns 400 over-settlement |
-| 5 | B tries to record a settlement from C | 403; caller can record only a payment from their own member account |
+| 5 | B, who is neither party nor admin, tries to record a settlement from C to A | 403; caller is not authorized to record this payment |
 | 6 | Group member tries self-settlement or uses an inactive/foreign member ID | 400 validation/business error |
 | 7 | No token / non-member requests settlement history | 401 / 404 |
 | 8 | Creator C: `DELETE /api/settlements/:settlementId` | 200; record becomes void/deleted and balances reverse |
@@ -337,7 +378,76 @@ Use the Phase 4 A/B/C group and existing expenses that yield A `+1700`, B `-400`
 | 12 | A: `GET /api/expenses/:expenseId/comments` | 200; comment visible to active group member |
 | 13 | A tries deleting B's comment; then B deletes it | 403 for A; 200 for author B |
 | 14 | Admin deletes a different member's comment | 200 |
-| 15 | Send an empty/over-2000-character comment | 400 validation error |
+| 15 | Send an empty/over-500-character comment | 400 validation error |
 | 16 | Create expense involving B, then settle to A with SMTP enabled | Expense/settlement requests return without waiting for email; B/A receive queued notices after the response |
+| 17 | B: `PATCH /api/users/me` with `{ "emailNotifications": false }`, then add an expense involving B | B receives no notification email |
 
 Transactions and over-settlement protection require Atlas or a replica-set/sharded MongoDB deployment. SMTP-backed delivery requires valid SMTP credentials. Unit tests for validation, balance math, settlement limits, comment permissions, activity shape, and queue behavior run without external services via `npm test`.
+
+## Phase 6: Analytics, exports, recurring expenses, operations
+
+### Analytics and exports
+
+`GET /api/groups/:groupId/stats` returns total spend in the group's currency, expense count, spend by category, split spend per group member, UTC monthly trend, and top payer. `GET /api/users/me/stats` returns personal split spend grouped by currency and by group; INR and USD totals are never combined. Aggregations include only non-deleted expenses and normalize source expense currencies using the configured rates in `src/config/exchangeRates.js`.
+
+`GET /api/groups/:groupId/export?format=csv` downloads all non-deleted expenses as CSV. Cells are quoted and spreadsheet formula prefixes are escaped. `format=pdf` downloads a PDF summary with total spend, categories, member split spend, monthly trend, and top spender. Both routes require active group membership.
+
+### Recurring expenses
+
+Create a template with `POST /api/groups/:groupId/recurring-expenses`:
+
+```json
+{
+	"description": "Monthly rent",
+	"amount": 30000,
+	"currency": "INR",
+	"frequency": "monthly",
+	"paidBy": [{ "member": "<memberId>", "amount": 30000 }],
+	"splitType": "EQUAL",
+	"splits": [{ "member": "<memberA>" }, { "member": "<memberB>" }]
+}
+```
+
+`GET /api/groups/:groupId/recurring-expenses` lists templates. `DELETE /api/recurring-expenses/:recurringExpenseId` stops a template; only its creator or a group admin may stop it. Weekly and monthly dates are calculated in UTC. Monthly schedules retain their original day-of-month across short months (for example Jan 31 → Feb 28 → Mar 31).
+
+After MongoDB connects, node-cron checks for due templates every minute. A lease avoids duplicate processing across overlapping workers; each generated expense uses a unique template/occurrence key and is created by the regular balance-locked expense transaction. Failed occurrences are retried on a later tick. If the template creator is no longer an active group member, the template is stopped and a warning is logged. Keep the app process running for the scheduler; with multiple instances, leases and the unique occurrence index protect against duplicate charges.
+
+### Currency behavior
+
+Supported currencies are INR, USD, EUR, and GBP. Every expense stores its own currency and integer paise amount. Static example rates are defined as micro-INR units in `src/config/exchangeRates.js`; conversion uses integer `BigInt` arithmetic and rounds to the nearest target paise. Group balances, settlements, group analytics, and export summaries are presented in the group's currency. Personal stats remain separated per currency. These are configuration rates, not live FX quotes or accounting-grade historical exchange rates; update the config with appropriate reviewed rates before production use.
+
+### Production and operations
+
+- JSON request bodies are limited to 16 KiB; receipt image uploads are limited to one 5 MiB image.
+- Auth routes use the configured strict rate limit. Invite preview/join uses its own 30-per-15-minute limit. Mongo operator keys are sanitized, and Zod rejects unexpected fields.
+- Indexes cover unique user email, group member user IDs, invite codes, expense group/date queries, settlement group/date queries, and recurring due-job scans.
+- OpenAPI/Swagger UI is available at `/api/docs`.
+- `npm run seed` idempotently creates three demo users, an Expense Splitter Demo group, and sample expenses.
+- `npm test` runs Node regression tests and ESM Jest property tests. `npm run test:integration` runs the Supertest auth/group/invite/expense flow when `TEST_MONGO_URI` is set; use a disposable MongoDB replica set because the flow clears its collections.
+
+### Postman examples
+
+1. `GET /api/groups/:groupId/stats` with a member token returns `data.stats` containing `currency`, `totalSpend`, `expenseCount`, `spendByCategory`, `spendPerMember`, `monthlyTrend`, and `topSpender`. Empty groups return zero total, empty arrays, and `topSpender: null`.
+2. `GET /api/users/me/stats` returns `data.stats.summary` keyed by currency, plus `groups` and `monthlyTrend`; INR and USD stay in separate summary buckets.
+3. `GET /api/groups/:groupId/export?format=csv` returns HTTP 200 with `Content-Type: text/csv` and a `Content-Disposition` filename. `?format=pdf` returns HTTP 200 with `Content-Type: application/pdf` and a `.pdf` attachment.
+4. `POST /api/groups/:groupId/recurring-expenses` with the JSON body above returns 201 and `{ "success": true, "data": { "recurringExpense": { "frequency": "monthly", "currency": "INR", "amount": 30000, "nextRunAt": "..." } } }`. Set `startsAt` to a due timestamp to exercise the scheduler on its next minute tick. `GET` lists templates; creator/admin `DELETE /api/recurring-expenses/:id` returns 200 and deactivates it.
+5. `GET /api/docs` returns Swagger UI. `GET /api/health` reports current database readiness.
+
+### Docker Compose
+
+Set a strong `JWT_ACCESS_SECRET` and a replica-set `MONGO_URI` in `.env`, then run:
+
+```sh
+docker compose up --build
+```
+
+Compose runs the Node API and a persistent single-node MongoDB replica set so transactions work in local development. The app listens on the configured host `PORT` (default 5000); Swagger is at `http://localhost:5000/api/docs`. The compose database is for development, not a production backup strategy.
+
+### Render and MongoDB Atlas deployment
+
+1. Create an Atlas cluster and database user; use its SRV connection string with `retryWrites=true&w=majority` and `appName` as desired. Restrict Atlas Network Access to Render's static outbound IPs where available. Avoid broad `0.0.0.0/0` access except as a temporary development measure.
+2. Deploy this repository to Render as a Node web service (or Docker service). For native Node, use build command `npm ci` and start command `npm start`; Render supplies `PORT`.
+3. Set `NODE_ENV=production`, `MONGO_URI`, a randomly generated `JWT_ACCESS_SECRET` of at least 32 characters, `FRONTEND_URL`, and comma-separated `CORS_ORIGINS`. Add SMTP and Cloudinary credentials when those features are enabled. Never commit `.env` or put secrets in the Docker image.
+4. Render terminates HTTPS at its proxy; the app trusts one proxy hop in production. Use HTTPS for all clients and set frontend CORS origins narrowly.
+5. Keep at least one long-running web instance for node-cron. Multiple instances are safe from duplicate recurring entries due to job leases and unique occurrence keys, but confirm cron jobs and email queue expectations when scaling. The email queue is in-memory and not durable; use an external queue in a future production hardening phase if guaranteed delivery is required.
+6. Verify `/api/health`, `/api/docs`, auth, a group balance request, CSV/PDF exports, SMTP, Cloudinary uploads, and one recurring occurrence in a staging environment before enabling production traffic.

@@ -7,10 +7,19 @@ const activitySchema = new mongoose.Schema({
   event: {
     type: String,
     enum: [
+      'group.created',
+      'group.updated',
+      'group.placeholder_added',
       'group.member_joined',
       'group.member_removed',
+      'group.member_left',
+      'group.role_changed',
+      'group.placeholder_merged',
+      'group.invite_regenerated',
+      'group.invite_revoked',
       'group.invitation_sent',
       'expense.created',
+      'expense.updated',
       'expense.deleted',
       'expense.commented',
       'settlement.created',
@@ -26,7 +35,7 @@ const activitySchema = new mongoose.Schema({
   metadata: { type: mongoose.Schema.Types.Mixed, default: {} }
 }, { timestamps: true });
 
-activitySchema.index({ group: 1, createdAt: -1, _id: -1 });
+activitySchema.index({ group: 1, _id: -1 });
 
 const Activity = mongoose.model('Activity', activitySchema);
 

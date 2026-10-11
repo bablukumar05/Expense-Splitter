@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { emailSchema, objectId } from './common.js';
+import { SUPPORTED_CURRENCIES } from '../config/exchangeRates.js';
 
 const groupParams = z.object({ groupId: objectId }).strict();
 const memberParams = z.object({ groupId: objectId, memberId: objectId }).strict();
@@ -8,7 +9,7 @@ export const createGroupSchema = {
   body: z.object({
     name: z.string().trim().min(2).max(60),
     description: z.string().trim().max(200).optional(),
-    currency: z.string().trim().length(3).transform((value) => value.toUpperCase()).optional(),
+    currency: z.string().trim().toUpperCase().pipe(z.enum(SUPPORTED_CURRENCIES)).optional(),
     type: z.enum(['trip', 'home', 'couple', 'friends', 'other']).optional(),
     emoji: z.string().max(8).optional()
   }).strict()

@@ -39,6 +39,9 @@ export const env = {
   CORS_ORIGINS: parsed.data.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
 };
 
+const isSmtpPlaceholder = (value) => /example\.(com|net|org)|your-smtp|replace-this|<[^>]+>/i.test(value ?? '');
+const smtpValues = [env.SMTP_HOST, env.SMTP_USER, env.SMTP_PASS, env.SMTP_FROM];
+
 export const isSmtpConfigured = Boolean(
   env.SMTP_HOST && env.SMTP_PORT && env.SMTP_USER && env.SMTP_PASS && env.SMTP_FROM
-);
+) && !smtpValues.some(isSmtpPlaceholder);

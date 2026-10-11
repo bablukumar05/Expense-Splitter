@@ -27,7 +27,14 @@ test('expense JSON converts paise to rupees and hides Cloudinary public IDs', ()
     comments: [{
       user: '507f191e810c19729de860ec',
       userName: 'Asha',
-      text: 'Paid by UPI'
+      text: 'Paid by UPI',
+      isDeleted: false
+    }, {
+      user: '507f191e810c19729de860ed',
+      userName: 'Bala',
+      text: 'Removed comment',
+      isDeleted: true,
+      deletedAt: new Date()
     }]
   });
   const result = expense.toJSON();
@@ -37,5 +44,8 @@ test('expense JSON converts paise to rupees and hides Cloudinary public IDs', ()
   assert.equal(result.splits[0].owedAmount, 100);
   assert.equal(result.receiptPublicId, undefined);
   assert.equal(result.comments[0].text, 'Paid by UPI');
+  assert.equal(result.comments.length, 1);
+  assert.equal(result.comments[0].isDeleted, undefined);
+  assert.equal(result.comments[0].deletedAt, undefined);
   assert.equal(expense.toObject().amount, 10000);
 });

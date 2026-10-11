@@ -14,7 +14,7 @@ export const createComment = asyncHandler(async (request, response) => {
 
 export const listComments = asyncHandler(async (request, response) => (
   sendSuccess(response, 200, 'Comments fetched', {
-    comments: commentService.listExpenseComments(request.expense)
+    ...commentService.listExpenseComments(request.expense, request.validated.query)
   })
 ));
 

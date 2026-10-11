@@ -1,12 +1,14 @@
 import { z } from 'zod';
 import { emptyRequest, passwordSchema } from './common.js';
+import { SUPPORTED_CURRENCIES } from '../config/exchangeRates.js';
 
 export const updateProfileRequest = {
   ...emptyRequest,
   body: z.object({
     name: z.string().trim().min(1).max(80).optional(),
     avatar: z.string().url().max(2048).nullable().optional(),
-    defaultCurrency: z.string().regex(/^[A-Za-z]{3}$/).transform((currency) => currency.toUpperCase()).optional()
+    defaultCurrency: z.string().trim().toUpperCase().pipe(z.enum(SUPPORTED_CURRENCIES)).optional(),
+    emailNotifications: z.boolean().optional()
   }).strict().refine((body) => Object.keys(body).length > 0, 'At least one profile field is required')
 };
 

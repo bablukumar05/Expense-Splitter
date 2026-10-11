@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { CATEGORIES, SPLIT_TYPES } from '../models/Expense.js';
 import { objectId } from './common.js';
+import { SUPPORTED_CURRENCIES } from '../config/exchangeRates.js';
 
 const MAX_AMOUNT = 10_000_000;
 const twoDecimals = (value) => Math.abs(value * 100 - Math.round(value * 100)) < 1e-6;
@@ -28,9 +29,11 @@ export const createExpenseSchema = {
   body: z.object({
     description,
     amount: money,
+    currency: z.string().trim().toUpperCase().pipe(z.enum(SUPPORTED_CURRENCIES)).optional(),
     category: z.enum(CATEGORIES).default('general'),
     date: date.default(() => new Date()),
     notes: notes.optional(),
+    currency: z.string().trim().toUpperCase().pipe(z.enum(SUPPORTED_CURRENCIES)).optional(),
     paidBy: z.array(paidByItem).min(1).max(20),
     splitType: z.enum(SPLIT_TYPES),
     splits: z.array(splitItem).min(1).max(50)
@@ -56,7 +59,8 @@ export const updateExpenseSchema = {
     }
 
     const presentFinancialFields = financialFields.filter((field) => data[field] !== undefined);
-    if (presentFinancialFields.length > 0 && presentFinancialFields.length < financialFields.length) {
+    if ((presentFinancialFields.length > 0 && presentFinancialFields.length < financialFields.length) ||
+      (data.currency !== undefined && presentFinancialFields.length !== financialFields.length)) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'To change money details send amount, paidBy, splitType and splits together'

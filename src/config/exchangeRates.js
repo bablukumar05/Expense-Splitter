@@ -1,0 +1,10 @@
+export const EXCHANGE_RATE_SCALE = 1_000_000;
+
+export const EXCHANGE_RATES_INR_MICRO = Object.freeze({
+  INR: 1_000_000,
+  USD: 83_500_000,
+  EUR: 90_500_000,
+  GBP: 106_000_000
+});
+
+export const SUPPORTED_CURRENCIES = Object.keys(EXCHANGE_RATES_INR_MICRO);

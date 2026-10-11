@@ -27,8 +27,11 @@ export const listSettlementsSchema = {
   query: z.object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(20),
+    member: objectId.optional(),
     from: objectId.optional(),
     to: objectId.optional(),
+    fromDate: z.coerce.date().optional(),
+    toDate: z.coerce.date().optional(),
     method: z.enum(['cash', 'upi', 'bank', 'other']).optional()
   }).strict()
 };

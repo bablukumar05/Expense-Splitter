@@ -1,4 +1,5 @@
 import * as inviteService from '../services/invite.service.js';
+import { logActivity } from '../services/activity.service.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendSuccess } from '../utils/response.js';
 
@@ -9,11 +10,25 @@ export const getInvite = asyncHandler(async (request, response) => {
 
 export const regenerateInvite = asyncHandler(async (request, response) => {
   const invite = await inviteService.regenerateInvite(request.group._id);
+  void logActivity({
+    groupId: request.group._id,
+    actorId: request.user._id,
+    actorName: request.user.name,
+    event: 'group.invite_regenerated',
+    message: `${request.user.name} created a new invite link`
+  });
   return sendSuccess(response, 200, 'New invite link created. Old link no longer works.', { invite });
 });
 
 export const revokeInvite = asyncHandler(async (request, response) => {
   const invite = await inviteService.revokeInvite(request.group._id);
+  void logActivity({
+    groupId: request.group._id,
+    actorId: request.user._id,
+    actorName: request.user.name,
+    event: 'group.invite_revoked',
+    message: `${request.user.name} disabled the invite link`
+  });
   return sendSuccess(response, 200, 'Invite link disabled', { invite });
 });
 

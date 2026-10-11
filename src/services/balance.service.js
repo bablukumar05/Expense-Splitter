@@ -3,13 +3,14 @@ import Expense from '../models/Expense.js';
 import Group from '../models/Group.js';
 import Settlement from '../models/Settlement.js';
 import { fromPaise } from '../utils/money.js';
+import { convertPaise } from '../utils/currency.js';
 import { netBalance } from '../utils/balanceMath.js';
 import { simplifyDebts } from '../utils/simplifyDebts.js';
 
 const toObjectId = (id) => new mongoose.Types.ObjectId(id);
 const emptyParts = () => ({ paid: 0, owed: 0, settledPaid: 0, settledReceived: 0 });
 
-async function collectParts(match, { memberIds, session } = {}) {
+async function collectParts(match, { memberIds, session, currency, currencyByGroup, currencyByMember } = {}) {
   const objectIds = memberIds?.map(toObjectId);
   const memberFilter = (field) => (objectIds ? [{ $match: { [field]: { $in: objectIds } } }] : []);
 
@@ -20,7 +21,7 @@ async function collectParts(match, { memberIds, session } = {}) {
       ...memberFilter(`${arrayField}.member`),
       {
         $group: {
-          _id: `$${arrayField}.member`,
+          _id: { group: '$group', member: `$${arrayField}.member`, currency: '$currency' },
           total: { $sum: `$${arrayField}.${amountField}` }
         }
       }
@@ -32,29 +33,47 @@ async function collectParts(match, { memberIds, session } = {}) {
     const aggregate = Settlement.aggregate([
       { $match: { ...match, isDeleted: false } },
       ...memberFilter(side),
-      { $group: { _id: `$${side}`, total: { $sum: '$amount' } } }
+      { $group: { _id: { group: '$group', member: `$${side}` }, total: { $sum: '$amount' } } }
     ]);
     return session ? aggregate.session(session) : aggregate;
   };
 
-  const [paid, owed, settledPaid, settledReceived] = await Promise.all([
-    expenseAggregate('paidBy', 'amount'),
-    expenseAggregate('splits', 'owedAmount'),
-    settlementAggregate('from'),
-    settlementAggregate('to')
-  ]);
+  const jobs = [
+    () => expenseAggregate('paidBy', 'amount'),
+    () => expenseAggregate('splits', 'owedAmount'),
+    () => settlementAggregate('from'),
+    () => settlementAggregate('to')
+  ];
+  let results;
+  if (session) {
+    results = [];
+    for (const job of jobs) results.push(await job());
+  } else {
+    results = await Promise.all(jobs.map((job) => job()));
+  }
+  const [paid, owed, settledPaid, settledReceived] = results;
 
   const parts = new Map();
-  const put = (rows, key) => {
+  const put = (rows, key, convertExpenseCurrency = false) => {
     for (const row of rows) {
-      const memberId = String(row._id);
+      const groupedId = row._id && typeof row._id === 'object' && row._id.member !== undefined
+        ? row._id.member
+        : row._id;
+      const memberId = String(groupedId);
       if (!parts.has(memberId)) parts.set(memberId, emptyParts());
-      parts.get(memberId)[key] = row.total;
+      let total = row.total;
+      if (convertExpenseCurrency && row._id?.currency) {
+        const groupCurrency = currencyByGroup?.get(String(row._id.group));
+        const memberCurrency = currencyByMember?.get(memberId);
+        const targetCurrency = groupCurrency ?? memberCurrency ?? currency;
+        if (targetCurrency) total = convertPaise(total, row._id.currency, targetCurrency);
+      }
+      parts.get(memberId)[key] = (parts.get(memberId)[key] ?? 0) + total;
     }
   };
 
-  put(paid, 'paid');
-  put(owed, 'owed');
+  put(paid, 'paid', true);
+  put(owed, 'owed', true);
   put(settledPaid, 'settledPaid');
   put(settledReceived, 'settledReceived');
   return parts;
@@ -65,18 +84,18 @@ export async function computeNetBalances(groupId, options = {}) {
   return new Map([...parts].map(([memberId, values]) => [memberId, netBalance(values)]));
 }
 
-export async function getMemberNetBalance(groupId, memberId) {
-  const balances = await computeNetBalances(groupId, { memberIds: [memberId] });
+export async function getMemberNetBalance(groupId, memberId, currency) {
+  const balances = await computeNetBalances(groupId, { memberIds: [memberId], currency });
   return balances.get(String(memberId)) ?? 0;
 }
 
-export async function groupHasUnsettledBalances(groupId) {
-  const balances = await computeNetBalances(groupId);
+export async function groupHasUnsettledBalances(groupId, currency) {
+  const balances = await computeNetBalances(groupId, { currency });
   return [...balances.values()].some((balance) => balance !== 0);
 }
 
 export async function getGroupBalances(group, currentMember) {
-  const parts = await collectParts({ group: group._id });
+  const parts = await collectParts({ group: group._id }, { currency: group.currency });
   let netTotal = 0;
 
   for (const values of parts.values()) netTotal += netBalance(values);
@@ -114,7 +133,7 @@ export async function getGroupBalances(group, currentMember) {
 }
 
 export async function getSimplifiedPlan(group, currentMember, mineOnly = false) {
-  const balances = await computeNetBalances(group._id);
+  const balances = await computeNetBalances(group._id, { currency: group.currency });
   const plan = simplifyDebts([...balances].map(([member, balance]) => ({ member, balance })));
   const nameOf = (memberId) => group.members.id(memberId)?.name ?? 'Unknown';
   let transactions = plan.map((transaction) => ({
@@ -149,7 +168,10 @@ export async function getUserOverallBalances(userId) {
     ? new Map()
     : await collectParts(
       { group: { $in: groups.map((group) => group._id) } },
-      { memberIds: [...memberToGroup.keys()] }
+      {
+        memberIds: [...memberToGroup.keys()],
+        currencyByMember: new Map([...memberToGroup].map(([memberId, group]) => [memberId, group.currency]))
+      }
     );
 
   const groupBalances = [];

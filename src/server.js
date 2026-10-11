@@ -3,17 +3,21 @@ import app from './app.js';
 import { connectDatabase } from './config/db.js';
 import { env } from './config/env.js';
 import { logger } from './utils/logger.js';
+import { startRecurringExpenseJob } from './jobs/recurringExpense.job.js';
 
 let server;
+let recurringExpenseTask;
 
 async function start() {
   await connectDatabase();
   server = http.createServer(app);
+  recurringExpenseTask = startRecurringExpenseJob();
   server.listen(env.PORT, () => logger.info(`API listening on port ${env.PORT}`));
 }
 
 async function shutdown(signal) {
   logger.info(`Received ${signal}; shutting down`);
+  recurringExpenseTask?.stop();
   if (server) {
     server.close(async () => {
       const mongoose = await import('mongoose');

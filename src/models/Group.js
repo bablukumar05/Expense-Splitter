@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { SUPPORTED_CURRENCIES } from '../config/exchangeRates.js';
 
 export const MAX_MEMBERS = 50;
 export const MAX_GROUPS_PER_USER = 100;
@@ -29,7 +30,7 @@ const groupSchema = new mongoose.Schema({
   type: { type: String, enum: ['trip', 'home', 'couple', 'friends', 'other'], default: 'other' },
   emoji: { type: String, default: '💸', maxlength: 8 },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  currency: { type: String, default: 'INR', uppercase: true, minlength: 3, maxlength: 3 },
+  currency: { type: String, enum: SUPPORTED_CURRENCIES, default: 'INR', uppercase: true },
   members: { type: [memberSchema], default: [] },
   invite: { type: inviteSchema, required: true, select: false },
   balanceRevision: { type: Number, default: 0, select: false },

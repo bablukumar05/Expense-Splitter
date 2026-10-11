@@ -3,7 +3,11 @@ import { AppError } from '../utils/AppError.js';
 import { publicUser } from './authService.js';
 
 export async function updateProfile(userId, changes) {
-  const user = await User.findByIdAndUpdate(userId, { $set: changes }, {
+  const { emailNotifications, ...profileChanges } = changes;
+  const updates = { ...profileChanges };
+  if (emailNotifications !== undefined) updates['notifications.email'] = emailNotifications;
+
+  const user = await User.findByIdAndUpdate(userId, { $set: updates }, {
     new: true,
     runValidators: true
   });

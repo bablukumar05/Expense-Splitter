@@ -14,6 +14,7 @@ function publicUser(user) {
     email: user.email,
     avatar: user.avatar,
     defaultCurrency: user.defaultCurrency,
+    notifications: user.notifications,
     createdAt: user.createdAt
   };
 }

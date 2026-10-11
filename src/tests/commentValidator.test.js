@@ -10,7 +10,9 @@ test('comment schemas require trimmed non-empty text and valid route IDs', () =>
   assert.equal(comment.success, true);
   assert.equal(comment.data.text, 'Thanks!');
   assert.equal(createCommentSchema.body.safeParse({ text: '   ' }).success, false);
-  assert.equal(createCommentSchema.body.safeParse({ text: 'x'.repeat(2001) }).success, false);
+  assert.equal(createCommentSchema.body.safeParse({ text: 'x'.repeat(500) }).success, true);
+  assert.equal(createCommentSchema.body.safeParse({ text: 'x'.repeat(501) }).success, false);
   assert.equal(expenseCommentsSchema.params.safeParse({ expenseId }).success, true);
   assert.equal(commentIdSchema.params.safeParse({ expenseId, commentId }).success, true);
+  assert.equal(expenseCommentsSchema.query.safeParse({ after: commentId, limit: '10' }).success, true);
 });

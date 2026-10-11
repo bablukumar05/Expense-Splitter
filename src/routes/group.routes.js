@@ -26,6 +26,12 @@ import { createExpenseSchema, listExpensesSchema } from '../validators/expense.v
 import { simplifySchema } from '../validators/balance.validator.js';
 import { createSettlementSchema, listSettlementsSchema } from '../validators/settlement.validator.js';
 import { listActivitySchema } from '../validators/activity.validator.js';
+import * as analyticsController from '../controllers/analytics.controller.js';
+import { groupStatsSchema } from '../validators/analytics.validator.js';
+import * as exportController from '../controllers/export.controller.js';
+import { exportGroupSchema } from '../validators/analytics.validator.js';
+import * as recurringController from '../controllers/recurringExpense.controller.js';
+import { createRecurringExpenseSchema, listRecurringExpensesSchema } from '../validators/recurringExpense.validator.js';
 
 const router = Router();
 router.use(authenticate);
@@ -52,6 +58,10 @@ router.get('/:groupId/simplify', validate(simplifySchema), loadGroup, balanceCon
 router.post('/:groupId/settlements', validate(createSettlementSchema), loadGroup, settlementController.createSettlement);
 router.get('/:groupId/settlements', validate(listSettlementsSchema), loadGroup, settlementController.listSettlements);
 router.get('/:groupId/activity', validate(listActivitySchema), loadGroup, activityController.getActivity);
+router.get('/:groupId/stats', validate(groupStatsSchema), loadGroup, analyticsController.getGroupStats);
+router.get('/:groupId/export', validate(exportGroupSchema), loadGroup, exportController.exportGroup);
+router.post('/:groupId/recurring-expenses', validate(createRecurringExpenseSchema), loadGroup, recurringController.createRecurringExpense);
+router.get('/:groupId/recurring-expenses', validate(listRecurringExpensesSchema), loadGroup, recurringController.listRecurringExpenses);
 
 router.get('/:groupId/invite', validate(groupIdSchema), loadGroup, requireAdmin, inviteController.getInvite);
 router.post('/:groupId/invite/regenerate', validate(groupIdSchema), loadGroup, requireAdmin, inviteController.regenerateInvite);

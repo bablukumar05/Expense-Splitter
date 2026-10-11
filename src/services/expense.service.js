@@ -1,19 +1,15 @@
 import mongoose from 'mongoose';
 import Expense from '../models/Expense.js';
-import { User } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
 import { fromPaise, toPaise } from '../utils/money.js';
+import { convertPaise } from '../utils/currency.js';
 import { calculateSplits } from '../utils/splitCalculator.js';
 import { logActivity } from './activity.service.js';
-import { notificationQueue } from './notificationQueue.js';
+import { notifyNewExpense } from './notification.service.js';
 import { lockGroupBalanceRevision } from './balanceRevision.service.js';
-import { sendEmail } from '../utils/sendEmail.js';
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const toObjectId = (value) => new mongoose.Types.ObjectId(value);
-const escapeHtml = (value) => value.replace(/[&<>"']/g, (character) => ({
-  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-}[character]));
 
 function assertValidMembers(ids, allowedMembers, label) {
   const seen = new Set();
@@ -26,7 +22,7 @@ function assertValidMembers(ids, allowedMembers, label) {
   }
 }
 
-function buildFinancials(group, { amount, paidBy, splitType, splits }, existingMemberIds = []) {
+export function prepareExpenseFinancials(group, { amount, paidBy, splitType, splits }, existingMemberIds = []) {
   const total = toPaise(amount);
   if (!Number.isSafeInteger(total) || total <= 0) throw new AppError('Invalid total amount', 400);
 
@@ -56,69 +52,64 @@ function buildFinancials(group, { amount, paidBy, splitType, splits }, existingM
   return { total, paidBy: paidByPaise, splitType, splits: calculatedSplits };
 }
 
-export async function createExpense(group, user, body) {
+export async function createExpense(group, user, body, recurring = {}) {
   const session = await mongoose.startSession();
   let currentGroup;
   let expense;
   let financials;
+  let alreadyCreated = false;
 
   try {
     await session.withTransaction(async () => {
       currentGroup = await lockGroupBalanceRevision(group._id, session);
       if (!currentGroup.findActiveMemberByUser(user._id)) throw new AppError('Group not found', 404);
-      financials = buildFinancials(currentGroup, body);
+      if (recurring.recurringExpenseId && recurring.occurrenceAt) {
+        expense = await Expense.findOne({
+          recurringExpenseId: recurring.recurringExpenseId,
+          recurringOccurrenceAt: recurring.occurrenceAt
+        }).session(session);
+        if (expense) {
+          alreadyCreated = true;
+          return;
+        }
+      }
+
+      financials = prepareExpenseFinancials(currentGroup, body);
       expense = new Expense({
         group: currentGroup._id,
         description: body.description,
         amount: financials.total,
-        currency: currentGroup.currency,
+        currency: body.currency ?? currentGroup.currency,
         category: body.category,
         date: body.date,
         notes: body.notes,
         paidBy: financials.paidBy,
         splitType: financials.splitType,
         splits: financials.splits,
-        createdBy: user._id
+        createdBy: user._id,
+        recurringExpenseId: recurring.recurringExpenseId ?? null,
+        recurringOccurrenceAt: recurring.occurrenceAt ?? null
       });
       await expense.save({ session });
 
-      await logActivity({
-        groupId: currentGroup._id,
-        actorId: user._id,
-        actorName: user.name,
-        event: 'expense.created',
-        message: `${user.name} added expense "${body.description}"`,
-        entityType: 'expense',
-        entityId: expense._id,
-        metadata: { amount: financials.total, currency: currentGroup.currency },
-        session
-      });
     });
   } finally {
     await session.endSession();
   }
 
-  const involvedIds = new Set([
-    ...body.paidBy.map((payer) => String(payer.member)),
-    ...body.splits.map((split) => String(split.member))
-  ]);
-  const accountIds = [...new Set(currentGroup.members
-      .filter((member) => member.user && involvedIds.has(String(member._id)) && String(member.user) !== String(user._id))
-    .map((member) => String(member.user)))];
+  if (alreadyCreated) return expense;
 
-  if (accountIds.length > 0) {
-    notificationQueue.enqueue(async () => {
-      const recipients = await User.find({ _id: { $in: accountIds } }).select('email');
-      const safeDescription = escapeHtml(body.description);
-      const safeActorName = escapeHtml(user.name);
-      await Promise.all(recipients.filter((recipient) => recipient.email).map((recipient) => sendEmail({
-        to: recipient.email,
-        subject: 'A new expense involves you',
-        text: `${user.name} added an expense: ${body.description} (${body.amount} ${group.currency}).`,
-        html: `<p>${safeActorName} added an expense involving you: <b>${safeDescription}</b> (${body.amount} ${group.currency}).</p>`
-      })));
-    });
-  }
+  void logActivity({
+    groupId: currentGroup._id,
+    actorId: user._id,
+    actorName: user.name,
+    event: 'expense.created',
+    message: `${user.name} added expense "${body.description}"`,
+    entityType: 'expense',
+    entityId: expense._id,
+    metadata: { amount: financials.total, currency: body.currency ?? currentGroup.currency }
+  });
+  void notifyNewExpense(currentGroup, user, expense);
 
   return expense;
 }
@@ -134,7 +125,7 @@ export async function updateExpense(expense, group, user, body) {
         .session(session);
       if (!updatedExpense) throw new AppError('Expense not found', 404);
 
-      const { amount, paidBy, splitType, splits, ...details } = body;
+      const { amount, paidBy, splitType, splits, currency, ...details } = body;
       for (const field of ['description', 'category', 'date', 'notes']) {
         if (details[field] !== undefined) updatedExpense[field] = details[field];
       }
@@ -144,11 +135,12 @@ export async function updateExpense(expense, group, user, body) {
           ...updatedExpense.paidBy.map((payer) => payer.member),
           ...updatedExpense.splits.map((split) => split.member)
         ];
-        const financials = buildFinancials(currentGroup, { amount, paidBy, splitType, splits }, existingMemberIds);
+        const financials = prepareExpenseFinancials(currentGroup, { amount, paidBy, splitType, splits }, existingMemberIds);
         updatedExpense.amount = financials.total;
         updatedExpense.paidBy = financials.paidBy;
         updatedExpense.splitType = financials.splitType;
         updatedExpense.splits = financials.splits;
+        updatedExpense.currency = currency ?? updatedExpense.currency;
       }
 
       await updatedExpense.save({ session });
@@ -156,11 +148,21 @@ export async function updateExpense(expense, group, user, body) {
   } finally {
     await session.endSession();
   }
+  void logActivity({
+    groupId: group._id,
+    actorId: user._id,
+    actorName: user.name,
+    event: 'expense.updated',
+    message: `${user.name} edited expense "${updatedExpense.description}"`,
+    entityType: 'expense',
+    entityId: updatedExpense._id
+  });
   return updatedExpense;
 }
 
 export async function softDeleteExpense(expense, user) {
   const session = await mongoose.startSession();
+  let deletedExpense;
   try {
     await session.withTransaction(async () => {
       const group = await lockGroupBalanceRevision(expense.group, session);
@@ -172,20 +174,20 @@ export async function softDeleteExpense(expense, user) {
       currentExpense.deletedAt = new Date();
       currentExpense.deletedBy = user._id;
       await currentExpense.save({ session });
-      await logActivity({
-        groupId: group._id,
-        actorId: user._id,
-        actorName: user.name,
-        event: 'expense.deleted',
-        message: `${user.name} deleted expense "${currentExpense.description}"`,
-        entityType: 'expense',
-        entityId: currentExpense._id,
-        session
-      });
+      deletedExpense = currentExpense;
     });
   } finally {
     await session.endSession();
   }
+  void logActivity({
+    groupId: expense.group,
+    actorId: user._id,
+    actorName: user.name,
+    event: 'expense.deleted',
+    message: `${user.name} deleted expense "${deletedExpense.description}"`,
+    entityType: 'expense',
+    entityId: deletedExpense._id
+  });
 }
 
 function endOfUtcDay(date) {
@@ -222,13 +224,18 @@ export async function listExpenses(group, query) {
     Expense.countDocuments(filter),
     Expense.aggregate([
       { $match: filter },
-      { $group: { _id: null, totalAmount: { $sum: '$amount' } } }
+      { $group: { _id: '$currency', totalAmount: { $sum: '$amount' } } }
     ])
   ]);
 
   return {
     expenses,
-    summary: { totalAmount: fromPaise(aggregate[0]?.totalAmount ?? 0) },
+    summary: {
+      totalAmount: fromPaise(aggregate.reduce((sum, row) => (
+        sum + convertPaise(row.totalAmount, row._id ?? group.currency, group.currency)
+      ), 0)),
+      currency: group.currency
+    },
     pagination: { page, limit, total, pages: Math.ceil(total / limit) }
   };
 }

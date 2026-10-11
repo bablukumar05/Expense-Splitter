@@ -10,12 +10,16 @@ import groupRoutes from './routes/group.routes.js';
 import inviteRoutes from './routes/invite.routes.js';
 import expenseRoutes from './routes/expense.routes.js';
 import settlementRoutes from './routes/settlement.routes.js';
+import recurringExpenseRoutes from './routes/recurringExpense.routes.js';
 import userRoutes from './routes/userRoutes.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { inviteLimiter } from './middleware/rateLimiter.js';
 import { logger } from './utils/logger.js';
+import swaggerUi from 'swagger-ui-express';
+import { openApiDocument } from './config/openapi.js';
 
 const app = express();
+app.set("trust proxy", 1);
 
 app.disable('x-powered-by');
 app.set('trust proxy', env.NODE_ENV === 'production' ? 1 : false);
@@ -40,6 +44,8 @@ app.use('/api/groups', groupRoutes);
 app.use('/api/invite', inviteLimiter, inviteRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/settlements', settlementRoutes);
+app.use('/api/recurring-expenses', recurringExpenseRoutes);
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument, { explorer: true }));
 app.use(notFoundHandler);
 app.use(errorHandler);
 

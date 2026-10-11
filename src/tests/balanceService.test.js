@@ -4,7 +4,12 @@ import mongoose from 'mongoose';
 import Expense from '../models/Expense.js';
 import Group from '../models/Group.js';
 import Settlement from '../models/Settlement.js';
-import { getGroupBalances, getSimplifiedPlan, getUserOverallBalances } from '../services/balance.service.js';
+import {
+  computeNetBalances,
+  getGroupBalances,
+  getSimplifiedPlan,
+  getUserOverallBalances
+} from '../services/balance.service.js';
 
 const memberA = '507f1f77bcf86cd799439011';
 const memberB = '507f191e810c19729de860ea';
@@ -70,7 +75,9 @@ test('settlement paid adds to debtor net and settlement received subtracts from 
   const originalSettlementAggregate = Settlement.aggregate;
   Expense.aggregate = (pipeline) => Promise.resolve(aggregateFixture(pipeline));
   Settlement.aggregate = (pipeline) => {
-    const side = pipeline.find((stage) => stage.$group)?.$group?._id?.slice(1);
+    const groupedMember = Object.values(pipeline.find((stage) => stage.$group)?.$group?._id ?? {})
+      .find((value) => value === '$from' || value === '$to');
+    const side = groupedMember?.slice(1);
     if (side === 'from') return Promise.resolve([{ _id: new mongoose.Types.ObjectId(memberC), total: 130000 }]);
     if (side === 'to') return Promise.resolve([{ _id: new mongoose.Types.ObjectId(memberA), total: 130000 }]);
     return Promise.resolve([]);
@@ -136,6 +143,64 @@ test('overall balances keep separate currencies and aggregate by the user member
     assert.deepEqual(result.groups.map((entry) => entry.currency), ['INR', 'USD']);
   } finally {
     Group.find = originalGroupFind;
+    Expense.aggregate = originalExpenseAggregate;
+    Settlement.aggregate = originalSettlementAggregate;
+  }
+});
+
+test('group balance aggregation converts expense currency into the group currency', async () => {
+  const originalExpenseAggregate = Expense.aggregate;
+  const originalSettlementAggregate = Settlement.aggregate;
+  Expense.aggregate = (pipeline) => {
+    const unwind = pipeline.find((stage) => stage.$unwind)?.$unwind;
+    if (unwind === '$paidBy') {
+      return Promise.resolve([{
+        _id: { group: new mongoose.Types.ObjectId(groupId), member: new mongoose.Types.ObjectId(memberA), currency: 'USD' },
+        total: 10000
+      }]);
+    }
+    return Promise.resolve([{
+      _id: { group: new mongoose.Types.ObjectId(groupId), member: new mongoose.Types.ObjectId(memberB), currency: 'USD' },
+      total: 10000
+    }]);
+  };
+  Settlement.aggregate = () => Promise.resolve([]);
+
+  try {
+    const balances = await getGroupBalances(makeGroup(), { _id: memberA });
+    assert.equal(balances.currency, 'INR');
+    assert.equal(balances.isBalanced, true);
+    assert.equal(balances.balances.find((row) => row.name === 'Asha').balance, 8350);
+    assert.equal(balances.balances.find((row) => row.name === 'Bala').balance, -8350);
+  } finally {
+    Expense.aggregate = originalExpenseAggregate;
+    Settlement.aggregate = originalSettlementAggregate;
+  }
+});
+
+test('balance aggregations run sequentially when a transaction session is supplied', async () => {
+  const originalExpenseAggregate = Expense.aggregate;
+  const originalSettlementAggregate = Settlement.aggregate;
+  const session = {};
+  let activeAggregations = 0;
+  let maxConcurrentAggregations = 0;
+  const transactionAggregate = (pipeline) => ({
+    session: async (providedSession) => {
+      assert.equal(providedSession, session);
+      activeAggregations += 1;
+      maxConcurrentAggregations = Math.max(maxConcurrentAggregations, activeAggregations);
+      await new Promise((resolve) => setImmediate(resolve));
+      activeAggregations -= 1;
+      return aggregateFixture(pipeline);
+    }
+  });
+  Expense.aggregate = transactionAggregate;
+  Settlement.aggregate = transactionAggregate;
+
+  try {
+    await computeNetBalances(groupId, { memberIds: [memberA], session });
+    assert.equal(maxConcurrentAggregations, 1);
+  } finally {
     Expense.aggregate = originalExpenseAggregate;
     Settlement.aggregate = originalSettlementAggregate;
   }

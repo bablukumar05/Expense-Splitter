@@ -1,17 +1,11 @@
 import mongoose from 'mongoose';
 import Settlement from '../models/Settlement.js';
-import { User } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
-import { fromPaise, toPaise } from '../utils/money.js';
+import { formatMoney, fromPaise, toPaise } from '../utils/money.js';
 import { computeNetBalances } from './balance.service.js';
 import { logActivity } from './activity.service.js';
-import { notificationQueue } from './notificationQueue.js';
-import { sendEmail } from '../utils/sendEmail.js';
+import { notifySettlementRecorded } from './notification.service.js';
 import { lockGroupBalanceRevision } from './balanceRevision.service.js';
-
-const escapeHtml = (value) => value.replace(/[&<>"']/g, (character) => ({
-  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-}[character]));
 
 export function validateSettlementAmount(amount, fromBalance, toBalance) {
   if (!Number.isSafeInteger(amount) || amount <= 0) {
@@ -35,8 +29,7 @@ export async function createSettlement(group, actorMember, user, data) {
   const amount = toPaise(data.amount);
   const session = await mongoose.startSession();
   let createdSettlement;
-  let recipientAccountId;
-  let recipientName;
+  let settlementGroup;
 
   try {
     await session.withTransaction(async () => {
@@ -47,14 +40,17 @@ export async function createSettlement(group, actorMember, user, data) {
       if (!fromMember?.isActive || !toMember?.isActive) {
         throw new AppError('Both settlement members must be active group members', 400);
       }
-      if (!fromMember._id.equals(actorMember._id)) {
-        throw new AppError('You can only record a settlement paid by your own member account', 403);
+      const currentActorMember = currentGroup.findActiveMemberByUser(user._id);
+      if (!currentActorMember) throw new AppError('Group not found', 404);
+      const isParty = currentActorMember._id.equals(fromMember._id) || currentActorMember._id.equals(toMember._id);
+      if (!isParty && currentActorMember.role !== 'admin') {
+        throw new AppError('You can only record payments that involve you; admins can record any payment', 403);
       }
       if (fromMember._id.equals(toMember._id)) {
         throw new AppError('A member cannot settle with themselves', 400);
       }
 
-      const balances = await computeNetBalances(currentGroup._id, { session });
+      const balances = await computeNetBalances(currentGroup._id, { session, currency: currentGroup.currency });
       const fromBalance = balances.get(String(fromMember._id)) ?? 0;
       const toBalance = balances.get(String(toMember._id)) ?? 0;
       validateSettlementAmount(amount, fromBalance, toBalance);
@@ -72,49 +68,47 @@ export async function createSettlement(group, actorMember, user, data) {
       });
       await createdSettlement.save({ session });
 
-      await logActivity({
-        groupId: currentGroup._id,
-        actorId: user._id,
-        actorName: actorMember.name,
-        event: 'settlement.created',
-        message: `${actorMember.name} settled ${fromPaise(amount)} ${currentGroup.currency} with ${toMember.name}`,
-        entityType: 'settlement',
-        entityId: createdSettlement._id,
-        targetMember: toMember._id,
-        targetName: toMember.name,
-        metadata: { amount, currency: currentGroup.currency },
-        session
-      });
-
-      recipientAccountId = toMember.user;
-      recipientName = toMember.name;
+      settlementGroup = currentGroup;
     });
   } finally {
     await session.endSession();
   }
 
-  if (recipientAccountId) {
-    notificationQueue.enqueue(async () => {
-      const recipient = await User.findById(recipientAccountId).select('email');
-      if (!recipient?.email) return;
-      const safeActorName = escapeHtml(actorMember.name);
-      await sendEmail({
-        to: recipient.email,
-        subject: 'You received a settlement',
-        text: `${actorMember.name} recorded a settlement of ${fromPaise(amount)} ${group.currency} to ${recipientName}.`,
-        html: `<p>${safeActorName} settled <b>${fromPaise(amount)} ${group.currency}</b> with you.</p>`
-      });
-    });
-  }
+  void logActivity({
+    groupId: settlementGroup._id,
+    actorId: user._id,
+    actorName: actorMember.name,
+    event: 'settlement.created',
+    message: `${settlementGroup.members.id(createdSettlement.from)?.name ?? 'Unknown'} paid ${settlementGroup.members.id(createdSettlement.to)?.name ?? 'Unknown'} ${formatMoney(amount, settlementGroup.currency)}`,
+    entityType: 'settlement',
+    entityId: createdSettlement._id,
+    targetMember: createdSettlement.to,
+    targetName: settlementGroup.members.id(createdSettlement.to)?.name ?? '',
+    metadata: { amount, currency: settlementGroup.currency }
+  });
+  void notifySettlementRecorded(settlementGroup, user, createdSettlement);
 
   return createdSettlement;
 }
 
 export async function listSettlements(group, query) {
   const filter = { group: group._id, isDeleted: false };
+  if (query.member) {
+    const memberId = new mongoose.Types.ObjectId(query.member);
+    filter.$or = [{ from: memberId }, { to: memberId }];
+  }
   if (query.from) filter.from = new mongoose.Types.ObjectId(query.from);
   if (query.to) filter.to = new mongoose.Types.ObjectId(query.to);
   if (query.method) filter.method = query.method;
+  if (query.fromDate || query.toDate) {
+    filter.date = {};
+    if (query.fromDate) filter.date.$gte = query.fromDate;
+    if (query.toDate) {
+      const endDate = new Date(query.toDate);
+      endDate.setUTCHours(23, 59, 59, 999);
+      filter.date.$lte = endDate;
+    }
+  }
 
   const [settlements, total] = await Promise.all([
     Settlement.find(filter)
@@ -125,7 +119,11 @@ export async function listSettlements(group, query) {
   ]);
 
   return {
-    settlements,
+    settlements: settlements.map((settlement) => ({
+      ...settlement.toJSON(),
+      fromName: group.members.id(settlement.from)?.name ?? 'Unknown',
+      toName: group.members.id(settlement.to)?.name ?? 'Unknown'
+    })),
     pagination: {
       page: query.page,
       limit: query.limit,
@@ -138,6 +136,7 @@ export async function listSettlements(group, query) {
 export async function voidSettlement(settlementId, actorUser, actorMember) {
   const session = await mongoose.startSession();
   let voidedSettlement;
+  let settlementGroup;
 
   try {
     await session.withTransaction(async () => {
@@ -148,29 +147,35 @@ export async function voidSettlement(settlementId, actorUser, actorMember) {
       if (!settlement.createdBy.equals(actorUser._id) && actorMember.role !== 'admin') {
         throw new AppError('Only the settlement creator or a group admin can undo it', 403);
       }
+      const fromMember = group.members.id(settlement.from);
+      const toMember = group.members.id(settlement.to);
+      if (!fromMember?.isActive || !toMember?.isActive) {
+        throw new AppError("Can't undo: one of the settlement members has left the group", 400);
+      }
 
       settlement.isDeleted = true;
       settlement.deletedAt = new Date();
+      settlement.deletedBy = actorUser._id;
       settlement.status = 'void';
       await settlement.save({ session });
 
-      await logActivity({
-        groupId: group._id,
-        actorId: actorUser._id,
-        actorName: actorMember.name,
-        event: 'settlement.voided',
-        message: `${actorMember.name} undid a settlement`,
-        entityType: 'settlement',
-        entityId: settlement._id,
-        metadata: { amount: settlement.amount, currency: group.currency },
-        session
-      });
-
       voidedSettlement = settlement;
+      settlementGroup = group;
     });
   } finally {
     await session.endSession();
   }
+
+  void logActivity({
+    groupId: settlementGroup._id,
+    actorId: actorUser._id,
+    actorName: actorMember.name,
+    event: 'settlement.voided',
+    message: `${actorMember.name} undid a settlement of ${formatMoney(voidedSettlement.amount, settlementGroup.currency)}`,
+    entityType: 'settlement',
+    entityId: voidedSettlement._id,
+    metadata: { amount: voidedSettlement.amount, currency: settlementGroup.currency }
+  });
 
   return voidedSettlement;
 }

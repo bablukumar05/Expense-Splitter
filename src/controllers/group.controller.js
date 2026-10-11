@@ -1,4 +1,5 @@
 import * as groupService from '../services/group.service.js';
+import { logActivity } from '../services/activity.service.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendSuccess } from '../utils/response.js';
 
@@ -9,6 +10,14 @@ async function groupPayload(group) {
 
 export const createGroup = asyncHandler(async (request, response) => {
   const group = await groupService.createGroup(request.user, request.validated.body);
+  void logActivity({
+    groupId: group._id,
+    actorId: request.user._id,
+    actorName: request.user.name,
+    event: 'group.created',
+    message: `${request.user.name} created group "${group.name}"`,
+    entityId: group._id
+  });
   return sendSuccess(response, 201, 'Group created', await groupPayload(group));
 });
 
@@ -23,6 +32,14 @@ export const getGroup = asyncHandler(async (request, response) => (
 
 export const updateGroup = asyncHandler(async (request, response) => {
   const group = await groupService.updateGroup(request.group, request.validated.body);
+  void logActivity({
+    groupId: group._id,
+    actorId: request.user._id,
+    actorName: request.user.name,
+    event: 'group.updated',
+    message: `${request.user.name} updated group details`,
+    entityId: group._id
+  });
   return sendSuccess(response, 200, 'Group updated', await groupPayload(group));
 });
 
@@ -33,6 +50,14 @@ export const archiveGroup = asyncHandler(async (request, response) => {
 
 export const addPlaceholder = asyncHandler(async (request, response) => {
   const group = await groupService.addPlaceholder(request.group, request.validated.body.name);
+  void logActivity({
+    groupId: group._id,
+    actorId: request.user._id,
+    actorName: request.user.name,
+    event: 'group.placeholder_added',
+    message: `${request.user.name} added ${request.validated.body.name} as a placeholder`,
+    targetName: request.validated.body.name
+  });
   return sendSuccess(response, 201, 'Placeholder member added', await groupPayload(group));
 });
 
@@ -52,25 +77,54 @@ export const unblockMember = asyncHandler(async (request, response) => {
 });
 
 export const changeRole = asyncHandler(async (request, response) => {
+  const targetName = request.group.members.id(request.validated.params.memberId)?.name ?? 'a member';
   const group = await groupService.changeRole(
     request.group,
     request.validated.params.memberId,
     request.validated.body.role
   );
+  void logActivity({
+    groupId: group._id,
+    actorId: request.user._id,
+    actorName: request.user.name,
+    event: 'group.role_changed',
+    message: `${request.user.name} changed ${targetName}'s role to ${request.validated.body.role}`,
+    targetMember: request.validated.params.memberId,
+    targetName
+  });
   return sendSuccess(response, 200, 'Role updated', await groupPayload(group));
 });
 
 export const leaveGroup = asyncHandler(async (request, response) => {
   await groupService.leaveGroup(request.group, request.member);
+  void logActivity({
+    groupId: request.group._id,
+    actorId: request.user._id,
+    actorName: request.member.name,
+    event: 'group.member_left',
+    message: `${request.member.name} left the group`,
+    targetMember: request.member._id,
+    targetName: request.member.name
+  });
   return sendSuccess(response, 200, 'You left the group', null);
 });
 
 export const mergePlaceholder = asyncHandler(async (request, response) => {
+  const sourceName = request.group.members.id(request.validated.params.placeholderId)?.name ?? 'a placeholder';
+  const targetName = request.group.members.id(request.validated.body.memberId)?.name ?? 'a member';
   const group = await groupService.mergePlaceholder(
     request.group,
     request.validated.params.placeholderId,
     request.validated.body.memberId
   );
+  void logActivity({
+    groupId: group._id,
+    actorId: request.user._id,
+    actorName: request.user.name,
+    event: 'group.placeholder_merged',
+    message: `${request.user.name} merged ${sourceName} into ${targetName}`,
+    targetName
+  });
   return sendSuccess(response, 200, 'Placeholder merged', await groupPayload(group));
 });
 

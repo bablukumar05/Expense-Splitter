@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as expenseController from '../controllers/expense.controller.js';
 import * as commentController from '../controllers/comment.controller.js';
 import { authenticate } from '../middleware/auth.js';
+import { commentLimiter } from '../middleware/rateLimiter.js';
 import { loadExpense, requireOwnerOrAdmin } from '../middleware/expenseAccess.js';
 import { uploadReceipt } from '../middleware/upload.js';
 import { validate } from '../middleware/validate.js';
@@ -32,6 +33,7 @@ router.delete(
 );
 router.post(
   '/:expenseId/comments',
+  commentLimiter,
   validate(createCommentSchema),
   loadExpense,
   commentController.createComment

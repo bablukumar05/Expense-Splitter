@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { fromPaise } from '../utils/money.js';
+import { SUPPORTED_CURRENCIES } from '../config/exchangeRates.js';
 
 export const CATEGORIES = [
   'general', 'food', 'groceries', 'transport', 'travel', 'stay',
@@ -32,8 +33,19 @@ const splitSchema = new mongoose.Schema({
 const commentSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   userName: { type: String, required: true, trim: true, maxlength: 80 },
-  text: { type: String, required: true, trim: true, maxlength: 2000 },
+  text: { type: String, required: true, trim: true, maxlength: 500 },
+  isDeleted: { type: Boolean, default: false },
+  deletedAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
+});
+
+commentSchema.set('toJSON', {
+  transform(_document, result) {
+    delete result.isDeleted;
+    delete result.deletedAt;
+    delete result.__v;
+    return result;
+  }
 });
 
 const expenseSchema = new mongoose.Schema({
@@ -45,7 +57,7 @@ const expenseSchema = new mongoose.Schema({
     min: 1,
     validate: { validator: Number.isSafeInteger, message: 'Amount must be an integer number of paise' }
   },
-  currency: { type: String, default: 'INR', uppercase: true, minlength: 3, maxlength: 3 },
+  currency: { type: String, enum: SUPPORTED_CURRENCIES, default: 'INR', uppercase: true },
   category: { type: String, enum: CATEGORIES, default: 'general' },
   date: { type: Date, default: Date.now },
   paidBy: {
@@ -61,6 +73,8 @@ const expenseSchema = new mongoose.Schema({
   receiptUrl: { type: String, default: '' },
   receiptPublicId: { type: String, default: '' },
   comments: { type: [commentSchema], default: [] },
+  recurringExpenseId: { type: mongoose.Schema.Types.ObjectId, ref: 'RecurringExpense', default: null, select: false },
+  recurringOccurrenceAt: { type: Date, default: null, select: false },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   isDeleted: { type: Boolean, default: false },
   deletedAt: { type: Date, default: null },
@@ -68,8 +82,19 @@ const expenseSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 expenseSchema.index({ group: 1, isDeleted: 1, date: -1 });
+expenseSchema.index({ group: 1, date: -1 });
 expenseSchema.index({ group: 1, 'paidBy.member': 1 });
 expenseSchema.index({ group: 1, 'splits.member': 1 });
+expenseSchema.index(
+  { recurringExpenseId: 1, recurringOccurrenceAt: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      recurringExpenseId: { $type: 'objectId' },
+      recurringOccurrenceAt: { $type: 'date' }
+    }
+  }
+);
 
 expenseSchema.pre('validate', function validateFinancialTotals() {
   const paidTotal = this.paidBy.reduce((sum, payer) => sum + payer.amount, 0);
@@ -84,10 +109,18 @@ expenseSchema.pre('validate', function validateFinancialTotals() {
 });
 
 expenseSchema.set('toJSON', {
-  transform(_document, result) {
+  transform(document, result) {
     result.amount = fromPaise(result.amount);
     result.paidBy = result.paidBy.map((payer) => ({ ...payer, amount: fromPaise(payer.amount) }));
     result.splits = result.splits.map((split) => ({ ...split, owedAmount: fromPaise(split.owedAmount) }));
+    const visibleCommentIds = new Set(document.comments
+      .filter((comment) => !comment.isDeleted)
+      .map((comment) => String(comment._id)));
+    result.comments = result.comments.filter((comment) => visibleCommentIds.has(String(comment._id))).map((comment) => {
+      delete comment.isDeleted;
+      delete comment.deletedAt;
+      return comment;
+    });
     delete result.receiptPublicId;
     delete result.__v;
     return result;

@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
+import { SUPPORTED_CURRENCIES } from '../config/exchangeRates.js';
 
 const refreshTokenSchema = new mongoose.Schema({
   tokenHash: { type: String, required: true },
@@ -11,7 +12,10 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true, maxlength: 254 },
   password: { type: String, required: true, select: false, minlength: 8 },
   avatar: { type: String, default: null, maxlength: 2048 },
-  defaultCurrency: { type: String, default: 'INR', uppercase: true, minlength: 3, maxlength: 3 },
+  defaultCurrency: { type: String, enum: SUPPORTED_CURRENCIES, default: 'INR', uppercase: true },
+  notifications: {
+    email: { type: Boolean, default: true }
+  },
   refreshTokens: { type: [refreshTokenSchema], default: [], select: false },
   passwordResetTokenHash: { type: String, default: null, select: false },
   passwordResetExpiresAt: { type: Date, default: null, select: false },
