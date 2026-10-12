@@ -49,11 +49,11 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-slate-200/90 bg-white text-slate-600 transition-colors">
-      {/* ---------- TOP NEWSLETTER & BRAND SPOTLIGHT ---------- */}
+
       <div className="border-b border-slate-100 bg-slate-50/60 py-12">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="grid gap-8 lg:grid-cols-12 lg:items-center">
-            {/* Left pitch */}
+
             <div className="lg:col-span-7">
               <div className="flex items-center gap-2.5">
                 <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-emerald-500 text-white shadow-xs">
@@ -74,7 +74,6 @@ export default function Footer() {
                 simplification.
               </p>
 
-              {/* Live operational status pill */}
               <div className="mt-4 flex items-center gap-2 text-xs font-medium text-slate-500">
                 <span className="relative flex size-2.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -86,7 +85,6 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* Right subscribe box */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs lg:col-span-5">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
                 <Sparkles className="size-3.5 text-indigo-600" />

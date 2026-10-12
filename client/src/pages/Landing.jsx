@@ -27,12 +27,10 @@ export default function Landing() {
   const navigate = useNavigate();
   const [demoLoading, setDemoLoading] = useState(false);
 
-  // Live Split Calculator state
   const [calcAmount, setCalcAmount] = useState(3000);
   const [calcPeople, setCalcPeople] = useState(4);
   const [calcSplitType, setCalcSplitType] = useState("EQUAL");
 
-  // FAQ accordion state
   const [openFaq, setOpenFaq] = useState(null);
 
   const handleDemoLogin = async () => {
@@ -51,7 +49,6 @@ export default function Landing() {
     }
   };
 
-  // Calculator preview math (paise calculation)
   const calcResults = useMemo(() => {
     const totalPaise = Math.round(calcAmount * 100);
     const count = Math.max(1, calcPeople);
@@ -67,7 +64,7 @@ export default function Landing() {
     }
 
     if (calcSplitType === "PERCENT") {
-      // 40%, 30%, 20%, 10% demo distribution
+
       const weights = [40, 30, 20, 10, 0, 0].slice(0, count);
       const sumWeight = weights.reduce((a, b) => a + b, 0) || 100;
       return Array.from({ length: count }, (_, i) => {
@@ -80,7 +77,6 @@ export default function Landing() {
       });
     }
 
-    // Shares
     const shares = [2, 1, 1, 1, 1, 1].slice(0, count);
     const totalShares = shares.reduce((a, b) => a + b, 0);
     return Array.from({ length: count }, (_, i) => ({
@@ -115,7 +111,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 selection:bg-indigo-100 selection:text-indigo-900 font-sans antialiased">
-      {/* ---------- NAVBAR ---------- */}
+
       <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2.5 group">
@@ -189,14 +185,13 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* ---------- HERO SECTION ---------- */}
       <section className="relative overflow-hidden pt-12 pb-16 sm:pt-20 sm:pb-24">
-        {/* Soft atmospheric gradient glow behind hero */}
+
         <div className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-indigo-200/50 via-emerald-100/40 to-transparent blur-3xl opacity-70" />
 
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mx-auto max-w-3xl text-center">
-            {/* Pill */}
+
             <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200/70 bg-indigo-50/80 px-3.5 py-1 text-xs font-semibold text-indigo-700 shadow-xs">
               <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Smart Debt Simplification 2.0</span>
@@ -204,7 +199,6 @@ export default function Landing() {
               <span className="text-slate-600">Zero Math Confusion</span>
             </div>
 
-            {/* Headline */}
             <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl sm:leading-[1.12]">
               Split expenses with friends,{" "}
               <span className="bg-gradient-to-r from-indigo-600 to-emerald-600 bg-clip-text text-transparent">
@@ -212,14 +206,12 @@ export default function Landing() {
               </span>
             </h1>
 
-            {/* Subtitle */}
             <p className="mt-5 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
               Goa trip ho, flat ka rent ya weekend dinner — sabhi kharche secondon mein baanto.
               Splitly circular payments ko automatically collapse karke sabse kam transfers mein
               settle kar deta hai.
             </p>
 
-            {/* CTA Group */}
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
                 to="/register"
@@ -241,7 +233,6 @@ export default function Landing() {
               )}
             </div>
 
-            {/* Trust Badges */}
             <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-slate-500">
               <span className="inline-flex items-center gap-1.5">
                 <CheckCircle2 className="size-4 text-emerald-600" />
@@ -258,12 +249,11 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* ---------- HERO INTERACTIVE SHOWCASE CARD ---------- */}
           <div
             id="simplifier"
             className="mt-14 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50"
           >
-            {/* Top Bar */}
+
             <div className="flex flex-wrap items-center justify-between border-b border-slate-100 bg-slate-50/70 px-5 py-3.5">
               <div className="flex items-center gap-2.5">
                 <span className="flex size-3 rounded-full bg-rose-400" />
@@ -279,9 +269,8 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Content: Before vs After Grid */}
             <div className="grid divide-y md:divide-y-0 md:divide-x divide-slate-100 md:grid-cols-2">
-              {/* Left: Without Splitly (Chaos) */}
+
               <div className="p-6 sm:p-8">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-rose-600">
@@ -322,7 +311,6 @@ export default function Landing() {
                 </div>
               </div>
 
-              {/* Right: With Splitly (Clean & Smart) */}
               <div className="bg-gradient-to-br from-indigo-50/40 via-white to-emerald-50/40 p-6 sm:p-8">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">
@@ -383,7 +371,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ---------- LIVE INTERACTIVE SPLIT CALCULATOR ---------- */}
       <section id="calculator" className="py-16 bg-white border-y border-slate-200/80">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mx-auto max-w-2xl text-center">
@@ -400,14 +387,13 @@ export default function Landing() {
           </div>
 
           <div className="mt-10 grid gap-8 lg:grid-cols-12 lg:items-center">
-            {/* Input Controls */}
+
             <div className="rounded-2xl border border-slate-200 bg-[#f8fafc] p-6 sm:p-8 lg:col-span-5 shadow-xs">
               <h3 className="text-base font-bold text-slate-900 mb-5 flex items-center gap-2">
                 <Sliders className="size-4 text-indigo-600" />
                 <span>Adjust Bill Details</span>
               </h3>
 
-              {/* Amount */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700">
                   Total Bill Amount:{" "}
@@ -429,7 +415,6 @@ export default function Landing() {
                 </div>
               </div>
 
-              {/* People Count */}
               <div className="mt-5 space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700">
                   Number of Friends:{" "}
@@ -453,7 +438,6 @@ export default function Landing() {
                 </div>
               </div>
 
-              {/* Split Mode */}
               <div className="mt-5 space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700">Split Method</label>
                 <div className="grid grid-cols-3 gap-2">
@@ -479,7 +463,6 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Results Card */}
             <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 lg:col-span-7 shadow-md">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
@@ -525,7 +508,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ---------- CORE FEATURES GRID ---------- */}
       <section id="features" className="py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mx-auto max-w-2xl text-center">
@@ -541,7 +523,7 @@ export default function Landing() {
           </div>
 
           <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Feature 1 */}
+
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs transition hover:-translate-y-1 hover:shadow-md">
               <span className="flex size-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
                 <RefreshCw className="size-5" />
@@ -555,7 +537,6 @@ export default function Landing() {
               </p>
             </div>
 
-            {/* Feature 2 */}
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs transition hover:-translate-y-1 hover:shadow-md">
               <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
                 <Sliders className="size-5" />
@@ -569,7 +550,6 @@ export default function Landing() {
               </p>
             </div>
 
-            {/* Feature 3 */}
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs transition hover:-translate-y-1 hover:shadow-md">
               <span className="flex size-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
                 <Share2 className="size-5" />
@@ -583,7 +563,6 @@ export default function Landing() {
               </p>
             </div>
 
-            {/* Feature 4 */}
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs transition hover:-translate-y-1 hover:shadow-md">
               <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
                 <PieChart className="size-5" />
@@ -597,7 +576,6 @@ export default function Landing() {
               </p>
             </div>
 
-            {/* Feature 5 */}
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs transition hover:-translate-y-1 hover:shadow-md">
               <span className="flex size-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
                 <Receipt className="size-5" />
@@ -611,7 +589,6 @@ export default function Landing() {
               </p>
             </div>
 
-            {/* Feature 6 */}
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs transition hover:-translate-y-1 hover:shadow-md">
               <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
                 <FileText className="size-5" />
@@ -628,7 +605,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ---------- 3-STEP HOW IT WORKS ---------- */}
       <section className="py-20 bg-white border-t border-slate-200/80">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mx-auto max-w-2xl text-center">
@@ -677,7 +653,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ---------- FAQ ACCORDION ---------- */}
       <section id="faq" className="py-20 bg-[#f8fafc]">
         <div className="mx-auto max-w-4xl px-4 sm:px-6">
           <div className="text-center">
@@ -721,7 +696,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ---------- BOTTOM CALL TO ACTION ---------- */}
       <section className="py-16 bg-white border-t border-slate-200/80">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <div className="rounded-3xl bg-gradient-to-tr from-indigo-700 via-indigo-600 to-emerald-600 p-8 sm:p-14 text-center text-white shadow-xl shadow-indigo-100">
@@ -755,7 +729,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ---------- FOOTER ---------- */}
       <Footer />
     </div>
   );

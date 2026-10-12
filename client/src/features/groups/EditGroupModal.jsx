@@ -26,7 +26,6 @@ export default function EditGroupModal({ open, onClose, group }) {
   const update = useUpdateGroup(group._id);
   const [formError, setFormError] = useState("");
 
-  // Background refetch se group badle to khule form ko reset na karo: latest group ref mein rakhte hain
   const latest = useRef(group);
   useEffect(() => {
     latest.current = group;

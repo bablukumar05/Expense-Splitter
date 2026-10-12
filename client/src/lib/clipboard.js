@@ -5,7 +5,7 @@ export async function copyToClipboard(text) {
       return true;
     }
   } catch {
-    /* neeche fallback */
+
   }
 
   try {
@@ -28,7 +28,6 @@ export async function copyToClipboard(text) {
 
 export const canNativeShare = () => typeof navigator !== "undefined" && typeof navigator.share === "function";
 
-// "shared" | "cancelled" | "failed"
 export async function shareLink({ title, text, url }) {
   try {
     await navigator.share({ title, text, url });

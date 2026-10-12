@@ -26,7 +26,7 @@ export default function GroupTabs() {
             )
           }
         >
-          {/* 320px par jagah kam hoti hai, isliye icon chhoti screen par hide */}
+
           <Icon className="hidden size-4 sm:block" aria-hidden="true" />
           {label}
         </NavLink>

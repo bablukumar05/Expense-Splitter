@@ -11,7 +11,7 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    console.error(error, info); // baad mein yahan Sentry jaisa tool laga sakte ho
+    console.error(error, info);
   }
 
   render() {

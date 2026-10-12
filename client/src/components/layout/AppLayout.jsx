@@ -7,7 +7,6 @@ import Sidebar from "./Sidebar";
 export default function AppLayout() {
   const { pathname } = useLocation();
 
-  // /groups/<id>/members aur /groups/<id>/balances ek hi "page" hain: tab badalne par scroll na ho
   const page = pathname.split("/").slice(0, 3).join("/");
 
   useEffect(() => {
@@ -16,7 +15,7 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-dvh">
-      {/* Keyboard users ke liye: Tab dabate hi dikhta hai, navigation chhodke seedha content par */}
+
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[70] focus:rounded-lg focus:bg-brand focus:px-3 focus:py-2 focus:text-white"

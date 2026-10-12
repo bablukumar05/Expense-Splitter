@@ -1,6 +1,5 @@
 import { cn } from "@/lib/cn";
 
-// variant "glass": bade surfaces. variant "flat": lists ke items (blur nahi, fast)
 export default function Card({
   as: Tag = "div",
   variant = "glass",

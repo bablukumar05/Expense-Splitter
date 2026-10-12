@@ -102,7 +102,7 @@ export async function getGroupStats(group, options = {}) {
         };
       }
     } catch {
-      // non-fatal
+
     }
   }
 

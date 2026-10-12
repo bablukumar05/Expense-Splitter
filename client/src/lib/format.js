@@ -1,4 +1,4 @@
-// 1300 => "₹1,300", 1300.5 => "₹1,300.50"
+
 export const formatMoney = (amount, currency = "INR") => {
   try {
     return new Intl.NumberFormat("en-IN", {
@@ -20,7 +20,6 @@ export const formatDate = (value, options = {}) =>
     ...options,
   }).format(new Date(value));
 
-// "2 hours ago" jaisa. Ek hafte se purana ho to seedhi date dikhao.
 export const timeAgo = (value) => {
   const seconds = Math.round((Date.now() - new Date(value).getTime()) / 1000);
   if (seconds < 60) return "just now";
@@ -34,7 +33,6 @@ export const timeAgo = (value) => {
   return formatDate(value);
 };
 
-// "Bablu Kumar" => "BK"
 export const initials = (name = "") =>
   name
     .trim()
@@ -43,13 +41,11 @@ export const initials = (name = "") =>
     .map((word) => word[0]?.toUpperCase())
     .join("") || "?";
 
-// "1300.5" => 1300.5, "" => NaN
 export const parseMoney = (value) => {
   const n = Number.parseFloat(value);
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : NaN;
 };
 
-// "in 6 days", "in 3 hours", "in 12 minutes". Nikal chuka ho to "expired"
 export const timeUntil = (value) => {
   const seconds = Math.round((new Date(value).getTime() - Date.now()) / 1000);
   if (seconds <= 0) return "expired";

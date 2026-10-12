@@ -42,7 +42,6 @@ export default function GroupLayout() {
 
   if (query.isPending) return <GroupSkeleton />;
 
-  // data nahi aaya (pehli fetch fail hui)
   if (!group) {
     const status = query.error?.status;
     if (status === 404 || status === 400) {
@@ -65,7 +64,6 @@ export default function GroupLayout() {
     );
   }
 
-  // Backend sirf active members bhejta hai; "me" nahi mila to access nahi hona chahiye
   const me = group.members.find((member) => member.user?._id === user._id);
   if (!me) {
     return (

@@ -2,12 +2,12 @@ import { forwardRef } from "react";
 import { Input } from "./Input";
 
 const sanitize = (raw) => {
-  let v = raw.replace(/[^\d.]/g, ""); // sirf digits aur dot
+  let v = raw.replace(/[^\d.]/g, "");
   if (v === "") return "";
 
   const firstDot = v.indexOf(".");
   if (firstDot !== -1) {
-    // doosra dot hata do
+
     v = v.slice(0, firstDot + 1) + v.slice(firstDot + 1).replace(/\./g, "");
   }
 
@@ -18,7 +18,7 @@ const sanitize = (raw) => {
 
 const MoneyInput = forwardRef(function MoneyInput({ onChange, prefix = "₹", ...props }, ref) {
   const handleChange = (e) => {
-    e.target.value = sanitize(e.target.value); // pehle saaf karo, phir form library ko do
+    e.target.value = sanitize(e.target.value);
     onChange?.(e);
   };
 

@@ -2,14 +2,13 @@ export class ApiError extends Error {
   constructor({ message, status = 0, fieldErrors = {}, isNetworkError = false, isTimeout = false }) {
     super(message);
     this.name = "ApiError";
-    this.status = status; // 0 => server tak pahunche hi nahi
-    this.fieldErrors = fieldErrors; // { email: "Enter a valid email" }
+    this.status = status;
+    this.fieldErrors = fieldErrors;
     this.isNetworkError = isNetworkError;
     this.isTimeout = isTimeout;
   }
 }
 
-// Refresh fail hua aur session khatam: login dobara karna padega
 export class SessionExpiredError extends Error {
   constructor() {
     super("Session expired");
@@ -17,7 +16,6 @@ export class SessionExpiredError extends Error {
   }
 }
 
-// Axios ke alag-alag errors ko ek hi shape mein badalta hai
 export function toApiError(error) {
   if (error instanceof ApiError) return error;
 
@@ -37,7 +35,6 @@ export function toApiError(error) {
     });
   }
 
-  // Backend ka format: { success:false, message, errors:[{ field, message }] }
   const body = response.data;
   const fieldErrors = {};
   if (Array.isArray(body?.errors)) {
@@ -56,8 +53,6 @@ export function toApiError(error) {
 export const getErrorMessage = (error, fallback = "Something went wrong. Please try again.") =>
   error instanceof ApiError ? error.message : fallback;
 
-// Backend ke field errors ko react-hook-form ke fields mein daalta hai.
-// true => kam se kam ek field mein error laga diya.
 export function applyFieldErrors(error, setError, fields) {
   if (!(error instanceof ApiError)) return false;
   let applied = false;

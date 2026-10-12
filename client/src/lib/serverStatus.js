@@ -1,12 +1,12 @@
-// status: "ok" | "waking" | "down" | "recovered"
-export const SLOW_MS = 4000; // itni der jawab na aaye to "waking" dikhao
+
+export const SLOW_MS = 4000;
 
 const listeners = new Set();
 let state = { status: "ok", since: null };
 let recoverTimer;
 
 const set = (next) => {
-  state = { ...state, ...next }; // naya object: React ko change dikhta hai
+  state = { ...state, ...next };
   listeners.forEach((listener) => listener());
 };
 
@@ -28,7 +28,6 @@ export const markDown = () => {
   set({ status: "down", since: null });
 };
 
-// Server ne kisi bhi tarah jawab diya => zinda hai
 export const markAlive = () => {
   if (state.status !== "waking" && state.status !== "down") return;
   set({ status: "recovered" });

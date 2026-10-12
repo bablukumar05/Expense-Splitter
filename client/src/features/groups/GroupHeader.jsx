@@ -30,7 +30,7 @@ export default function GroupHeader({ group, isAdmin, onInvite }) {
       setLeaveOpen(false);
       navigate("/", { replace: true });
     } catch (error) {
-      setLeaveError(getErrorMessage(error)); // jaise: "You have an unsettled balance..."
+      setLeaveError(getErrorMessage(error));
     }
   };
 

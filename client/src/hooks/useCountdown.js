@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-// const [remaining, start] = useCountdown(); start(30) => 30, 29, ... 0
 export function useCountdown() {
   const [remaining, setRemaining] = useState(0);
 

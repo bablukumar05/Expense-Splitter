@@ -12,7 +12,7 @@ export const setRefreshToken = (token) => {
   try {
     localStorage.setItem(REFRESH_TOKEN_KEY, token);
   } catch {
-    /* storage blocked: session sirf is tab tak chalega */
+
   }
 };
 
@@ -20,6 +20,6 @@ export const clearRefreshToken = () => {
   try {
     localStorage.removeItem(REFRESH_TOKEN_KEY);
   } catch {
-    /* ignore */
+
   }
 };

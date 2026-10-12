@@ -15,7 +15,6 @@ export const authRateLimiter = rateLimit({
 
 export const authLimiter = authRateLimiter;
 
-// Login: sirf FAILED attempts count hote hain
 export const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,

@@ -40,7 +40,7 @@ export async function register({ name, email, password }) {
 
 export async function login({ email, password }) {
   const user = await User.findOne({ email }).select('+password +refreshTokens +tokenVersion');
-  // Keep the response identical for unknown emails and incorrect passwords.
+
   if (!user || !(await user.comparePassword(password))) {
     throw new AppError('Invalid email or password', 401);
   }
@@ -59,7 +59,7 @@ export async function refreshSession(refreshToken) {
   const nextRefreshToken = createOpaqueToken();
   const nextHash = hashToken(nextRefreshToken);
   const nextExpiry = new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
-  // Conditional positional replacement makes each refresh token single-use, including concurrent requests.
+
   const rotation = await User.updateOne(
     {
       _id: user._id,
@@ -100,7 +100,7 @@ export async function requestPasswordReset(email, sendResetEmail) {
   if (!user) return;
 
   const resetToken = createOpaqueToken();
-  // Persist only the digest; the raw token is delivered once through email.
+
   user.passwordResetTokenHash = hashToken(resetToken);
   user.passwordResetExpiresAt = new Date(Date.now() + PASSWORD_RESET_TTL_MS);
   await user.save();

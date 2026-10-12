@@ -31,7 +31,6 @@ export default function Dashboard() {
   const items = useMemo(() => groups.data?.pages.flatMap((page) => page.groups) ?? [], [groups.data]);
   const total = groups.data?.pages[0]?.pagination.total ?? 0;
 
-  // groupId => balance wala row, taaki har card mein O(1) lookup ho
   const balanceByGroup = useMemo(
     () => new Map((balances.data?.groups ?? []).map((row) => [String(row.groupId), row])),
     [balances.data]

@@ -8,7 +8,6 @@ export const GROUP_TYPES = [
   { value: "other", label: "Other", emoji: "💸" },
 ];
 
-// Emoji sirf presets mein se: invalid ya bahut lamba emoji server tak jaata hi nahi
 export const GROUP_EMOJIS = [
   "✈️", "🏖️", "🏠", "🍕", "🎉", "❤️", "🛒", "🚗",
   "🎬", "🎓", "⚽", "🎂", "💼", "🐶", "🏕️", "💸",
@@ -31,4 +30,4 @@ export const typeLabel = (value) =>
 export const typeEmoji = (value) =>
   GROUP_TYPES.find((type) => type.value === value)?.emoji ?? "💸";
 
-export const MAX_MEMBERS = 50; // backend ka limit
+export const MAX_MEMBERS = 50;

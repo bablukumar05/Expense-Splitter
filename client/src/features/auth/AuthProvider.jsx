@@ -13,7 +13,7 @@ import { getRefreshToken, setRefreshToken } from "@/lib/storage";
 import { AuthContext } from "./auth-context";
 
 export default function AuthProvider({ children }) {
-  // Refresh token hi nahi hai to loader dikhane ki zaroorat nahi (flash se bachav)
+
   const [state, setState] = useState(() => ({
     status: getRefreshToken() ? "loading" : "unauthenticated",
     user: null,
@@ -21,11 +21,10 @@ export default function AuthProvider({ children }) {
 
   const endSession = useCallback(() => {
     clearSession();
-    queryClient.clear(); // purane user ka cache na bache
+    queryClient.clear();
     setState({ status: "unauthenticated", user: null });
   }, []);
 
-  // Page khulte hi: refresh token se naya access token, phir user ki details
   const bootstrap = useCallback(async () => {
     if (!getRefreshToken()) {
       setState({ status: "unauthenticated", user: null });
@@ -39,24 +38,23 @@ export default function AuthProvider({ children }) {
       if (error instanceof SessionExpiredError || (error instanceof ApiError && error.status === 401)) {
         endSession();
       } else {
-        // Server down ya network issue: logout mat karo, retry ka mauka do
+
         setState({ status: "error", user: null });
       }
     }
   }, [endSession]);
 
   useEffect(() => {
-    // Refresh fail hone par api/client.js isse bulata hai
+
     setSessionExpiredHandler(() => {
       queryClient.clear();
       setState({ status: "unauthenticated", user: null });
       toast.info("Your session expired. Please log in again.");
     });
-    bootstrap(); // StrictMode mein 2 baar chalta hai, par refreshSession single-flight hai
+    bootstrap();
     return () => setSessionExpiredHandler(() => {});
   }, [bootstrap]);
 
-  // Doosre tab mein logout hua (refresh token hata) to yahan bhi logout
   useEffect(() => {
     const onStorage = (event) => {
       if (event.key !== null && event.key !== "splitly.refreshToken") return;
@@ -82,7 +80,7 @@ export default function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     const refreshToken = getRefreshToken();
-    endSession(); // UI turant login par; backend call best-effort
+    endSession();
     if (refreshToken) authApi.logout(refreshToken).catch(() => {});
   }, [endSession]);
 

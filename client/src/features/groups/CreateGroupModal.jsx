@@ -26,7 +26,7 @@ export default function CreateGroupModal({ open, onClose }) {
   const [emojiPicked, setEmojiPicked] = useState(false);
 
   const defaultCurrency = user?.defaultCurrency || "INR";
-  // User ki default currency list mein na ho to bhi dikhe
+
   const currencies = CURRENCIES.some((c) => c.code === defaultCurrency)
     ? CURRENCIES
     : [{ code: defaultCurrency, label: defaultCurrency }, ...CURRENCIES];
@@ -47,7 +47,6 @@ export default function CreateGroupModal({ open, onClose }) {
   const type = watch("type");
   const emoji = watch("emoji");
 
-  // Modal band hote hi form saaf, agli baar fresh khule
   useEffect(() => {
     if (!open) {
       reset();

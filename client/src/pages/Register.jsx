@@ -37,11 +37,11 @@ export default function Register() {
   const onSubmit = async (values) => {
     setFormError("");
     try {
-      // confirmPassword server ko nahi bhejte
+
       await signup({ name: values.name, email: values.email, password: values.password });
     } catch (error) {
       if (error.status === 409) {
-        setError("email", { type: "server", message: error.message }); // email pehle se registered
+        setError("email", { type: "server", message: error.message });
       } else if (!applyFieldErrors(error, setError, ["name", "email", "password"])) {
         setFormError(getErrorMessage(error));
       }

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { EllipsisVertical } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-// items: [{ label, icon, onSelect, tone: "danger", hidden }]
 export default function DropdownMenu({ label = "More options", items, className }) {
   const [open, setOpen] = useState(false);
   const [openUp, setOpenUp] = useState(false);
@@ -36,7 +35,6 @@ export default function DropdownMenu({ label = "More options", items, className 
     };
   }, [open, close]);
 
-  // Khulte hi pehle item par focus (keyboard users ke liye)
   useEffect(() => {
     if (open) menuRef.current?.querySelector('[role="menuitem"]')?.focus();
   }, [open]);
@@ -47,7 +45,7 @@ export default function DropdownMenu({ label = "More options", items, className 
     if (!open) {
       const rect = buttonRef.current.getBoundingClientRect();
       const needed = visibleItems.length * 44 + 16;
-      // 72px: mobile ka bottom tab bar neeche ki jagah kha leta hai
+
       const below = window.innerHeight - rect.bottom - 72;
       setOpenUp(below < needed && rect.top > below);
     }

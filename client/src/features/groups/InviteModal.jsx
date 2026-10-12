@@ -49,7 +49,6 @@ function InviteContent({ group, invite }) {
   const [saving, setSaving] = useState(false);
   const [settingsError, setSettingsError] = useState("");
 
-  // Settings: "keep" matlab abhi ka expiry waisa hi rakho
   const currentMax = invite.maxUses == null ? "unlimited" : String(invite.maxUses);
   const [expiry, setExpiry] = useState("keep");
   const [maxUses, setMaxUses] = useState(currentMax);
@@ -90,7 +89,7 @@ function InviteContent({ group, invite }) {
 
   const handleShare = async () => {
     const result = await shareLink({ title: group.name, text: message, url: invite.link });
-    if (result === "failed") handleCopy(); // share na chale to kam se kam copy ho jaye
+    if (result === "failed") handleCopy();
   };
 
   const toggleActive = async (next) => {
@@ -145,13 +144,13 @@ function InviteContent({ group, invite }) {
       toast.success("If that email is valid, an invitation is on its way.");
       reset();
     } catch (error) {
-      toast.error(getErrorMessage(error)); // jaise: "Enable the invite link first"
+      toast.error(getErrorMessage(error));
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* 1. Link aur share */}
+
       <section aria-labelledby="invite-link-heading" className="space-y-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <h3 id="invite-link-heading" className="text-sm font-semibold">
@@ -206,7 +205,7 @@ function InviteContent({ group, invite }) {
               <QrCode className="size-4" aria-hidden="true" /> Show QR code
             </summary>
             <div className="mt-3 flex justify-center">
-              {/* Safed background zaroori hai: dark theme mein QR scan nahi hota */}
+
               <div className="rounded-xl bg-white p-3">
                 <QRCodeSVG value={invite.link} size={168} />
               </div>
@@ -216,7 +215,6 @@ function InviteContent({ group, invite }) {
         )}
       </section>
 
-      {/* 2. Email se invite */}
       <section aria-labelledby="invite-email-heading" className="space-y-2">
         <h3 id="invite-email-heading" className="text-sm font-semibold">
           Invite by email
@@ -247,7 +245,6 @@ function InviteContent({ group, invite }) {
         </p>
       </section>
 
-      {/* 3. Settings */}
       <section
         aria-labelledby="invite-settings-heading"
         className="space-y-4 rounded-2xl border border-line bg-white/[0.03] p-4"
@@ -299,7 +296,6 @@ function InviteContent({ group, invite }) {
         </Button>
       </section>
 
-      {/* 4. Naya link */}
       <section aria-labelledby="invite-regen-heading" className="space-y-2">
         <h3 id="invite-regen-heading" className="text-sm font-semibold">
           Create a new link
@@ -337,7 +333,7 @@ export default function InviteModal({ open, onClose, group }) {
 
   return (
     <Modal open={open} onClose={onClose} title="Invite people">
-      {/* Band hote hi content unmount: agli baar settings aur email field fresh khulte hain */}
+
       {open &&
         (invite.isPending ? (
           <div role="status" aria-label="Loading invite link" className="space-y-3">

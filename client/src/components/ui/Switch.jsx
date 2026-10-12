@@ -18,7 +18,6 @@ export default function Switch({ checked, onChange, label, description, disabled
         )}
       </div>
 
-      {/* Bahar ka button 44px ooncha (touch target), andar ka track chhota */}
       <button
         type="button"
         role="switch"

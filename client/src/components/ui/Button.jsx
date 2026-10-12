@@ -2,7 +2,6 @@ import { forwardRef } from "react";
 import Spinner from "./Spinner";
 import { buttonStyles } from "./button-styles";
 
-// type default "button": form ke andar galti se submit na ho. Submit ke liye type="submit" do.
 const Button = forwardRef(function Button(
   { variant, size, loading = false, fullWidth = false, className, children, disabled, type = "button", ...props },
   ref

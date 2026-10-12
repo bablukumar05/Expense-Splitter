@@ -31,7 +31,7 @@ const previewProblem = (error) => {
       text: "It may have expired, been turned off, or replaced by a newer link. Ask the group admin to send you a fresh one.",
     };
   }
-  return null; // network ya server ki dikkat: retry dikhayenge
+  return null;
 };
 
 export default function JoinPage() {
@@ -59,7 +59,7 @@ export default function JoinPage() {
         return;
       }
     } catch {
-      /* neeche fallback message */
+
     }
     setAlreadyMember(true);
   };
@@ -79,7 +79,6 @@ export default function JoinPage() {
     }
   };
 
-  /* ---------- Preview loading ---------- */
   if (preview.isPending) {
     return (
       <AuthLayout title="Checking invite…">
@@ -92,7 +91,6 @@ export default function JoinPage() {
     );
   }
 
-  /* ---------- Preview fail ---------- */
   if (preview.isError) {
     const problem = previewProblem(preview.error);
     return (
@@ -113,7 +111,6 @@ export default function JoinPage() {
     );
   }
 
-  /* ---------- Preview OK ---------- */
   const { name, memberCount } = preview.data;
 
   return (

@@ -17,7 +17,7 @@ export const authenticate = asyncHandler(async (request, _response, next) => {
   }
 
   const user = await User.findById(claims.sub).select('+tokenVersion');
-  // The version check revokes already-issued access tokens after password changes.
+
   if (!user || claims.ver !== user.tokenVersion) {
     throw new AppError('Invalid or expired access token', 401);
   }

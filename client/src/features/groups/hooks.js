@@ -13,7 +13,6 @@ import { queryKeys } from "@/lib/queryKeys";
 
 const PAGE_SIZE = 12;
 
-/* ---------------- Queries ---------------- */
 export function useGroups(search = "") {
   return useInfiniteQuery({
     queryKey: queryKeys.groups.list(search),
@@ -37,7 +36,6 @@ export function useGroup(groupId) {
   });
 }
 
-// enabled: invite modal khulne par hi fetch ho (sirf admin ke liye)
 export function useInvite(groupId, enabled) {
   return useQuery({
     queryKey: queryKeys.invite(groupId),
@@ -54,12 +52,10 @@ export function useInvitePreview(code) {
     queryFn: () => inviteApi.preview(code),
     select: (data) => data.group,
     staleTime: 60_000,
-    refetchOnWindowFocus: false, // public endpoint rate-limited hai, bar-bar mat maaro
+    refetchOnWindowFocus: false,
   });
 }
 
-/* ---------------- Cache refresh helpers ---------------- */
-// Group badalne par: uska detail, groups ki list (member count) aur overall balance
 function useRefreshGroup(groupId) {
   const queryClient = useQueryClient();
   return useCallback(
@@ -73,7 +69,6 @@ function useRefreshGroup(groupId) {
   );
 }
 
-// Group chhodne, delete ya join ke baad: detail ko chhedte nahi (warna 404 flash hota hai)
 function useRefreshLists() {
   const queryClient = useQueryClient();
   return useCallback(
@@ -86,7 +81,6 @@ function useRefreshLists() {
   );
 }
 
-/* ---------------- Group mutations ---------------- */
 export function useCreateGroup() {
   const refresh = useRefreshLists();
   return useMutation({ mutationFn: (body) => groupsApi.create(body), onSuccess: refresh });
@@ -146,8 +140,6 @@ export function useJoinGroup() {
   return useMutation({ mutationFn: (code) => inviteApi.join(code), onSuccess: refresh });
 }
 
-/* ---------------- Invite mutations ---------------- */
-// Backend naya invite wapas deta hai: seedha cache mein daal do, dobara fetch nahi
 function useInviteMutation(groupId, mutationFn) {
   const queryClient = useQueryClient();
   return useMutation({

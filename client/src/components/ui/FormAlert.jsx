@@ -1,4 +1,4 @@
-// Form ke upar ka error (jaise "Invalid email or password")
+
 export default function FormAlert({ children }) {
   if (!children) return null;
   return (

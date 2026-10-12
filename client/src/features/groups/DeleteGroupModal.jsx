@@ -45,7 +45,7 @@ export default function DeleteGroupModal({ open, onClose, group }) {
         action: { label: "Undo", onClick: undo },
       });
     } catch (err) {
-      setError(getErrorMessage(err)); // jaise: "Settle all balances before deleting the group"
+      setError(getErrorMessage(err));
     }
   };
 

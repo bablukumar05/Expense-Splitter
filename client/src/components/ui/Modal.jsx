@@ -10,7 +10,7 @@ export default function Modal({ open, onClose, title, children, footer }) {
     if (!dialog) return;
     if (open && !dialog.open) {
       dialog.showModal();
-      // Jis field par data-autofocus hai, wahan cursor jao (nahi hai to default behaviour)
+
       dialog.querySelector("[data-autofocus]")?.focus();
     }
     if (!open && dialog.open) dialog.close();
@@ -25,7 +25,6 @@ export default function Modal({ open, onClose, title, children, footer }) {
     };
   }, [open]);
 
-  // Keyboard khulne par focused input dikhta rahe
   const handleFocus = (e) => {
     if (e.target.matches("input, textarea, select")) {
       setTimeout(() => e.target.scrollIntoView({ block: "center", behavior: "smooth" }), 300);

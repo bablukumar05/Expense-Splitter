@@ -38,9 +38,9 @@ export default function Login() {
   const onSubmit = async (values) => {
     setFormError("");
     try {
-      await login(values); // success par GuestRoute redirect kar dega
+      await login(values);
     } catch (error) {
-      // Login ke errors (galat password) form-level dikhte hain, kaunsa field galat hai ye nahi batate
+
       if (!applyFieldErrors(error, setError, ["email", "password"])) {
         setFormError(getErrorMessage(error));
       }
@@ -60,7 +60,7 @@ export default function Login() {
       footer={
         <>
           New here?{" "}
-          {/* state pass karte hain taaki register ke baad bhi invite page par wapas aayein */}
+
           <Link to="/register" state={location.state} className={linkClass}>
             Create an account
           </Link>

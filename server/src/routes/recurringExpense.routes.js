@@ -7,10 +7,8 @@ import { recurringExpenseIdSchema } from '../validators/recurringExpenseId.valid
 
 const router = Router();
 
-// External trigger endpoint for free tier / external schedulers (protected by X-Trigger-Secret)
 router.post('/trigger', recurringController.triggerRecurringJob);
 
-// Protected endpoints for managing individual recurring expense templates
 router.use('/:recurringExpenseId', authenticate, validate(recurringExpenseIdSchema), loadRecurringExpense);
 
 router.delete('/:recurringExpenseId', recurringController.deactivateRecurringExpense);

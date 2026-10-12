@@ -8,7 +8,7 @@ import { wakeServer } from "@/api/client";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/queryClient";
 
-wakeServer(); // page khulte hi server ko jagao
+wakeServer();
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

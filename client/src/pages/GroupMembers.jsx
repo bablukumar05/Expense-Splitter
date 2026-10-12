@@ -62,10 +62,9 @@ export default function GroupMembers() {
 
   const [placeholderOpen, setPlaceholderOpen] = useState(false);
   const [mergeTarget, setMergeTarget] = useState(null);
-  const [action, setAction] = useState(null); // { type, member }
+  const [action, setAction] = useState(null);
   const [actionError, setActionError] = useState("");
 
-  // Pehle aap, phir admins, phir members, aakhir mein placeholders
   const members = useMemo(
     () =>
       [...group.members].sort(

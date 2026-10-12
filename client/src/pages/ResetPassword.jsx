@@ -44,7 +44,7 @@ export default function ResetPassword() {
       navigate("/login", { replace: true });
     } catch (error) {
       if (applyFieldErrors(error, setError, ["password"])) return;
-      // Token galat ya expire: 400. Naya link maangne ka option dikhao
+
       if (error.status === 400) setLinkProblem(true);
       setFormError(getErrorMessage(error));
     }

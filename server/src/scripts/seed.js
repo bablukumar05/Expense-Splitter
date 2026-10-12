@@ -42,18 +42,14 @@ async function seed() {
     process.exit(1);
   }
 
-  // Temporarily disable email sending queue during seed
   notificationQueue.configured = false;
 
   await connectDatabase();
   logger.info('Connected to database for seeding');
 
-  // 1. Create or retrieve demo users
   const users = await Promise.all(demoUsersData.map(getOrCreateUser));
   const [asha, bala, charu, dev, esha] = users;
 
-  // 2. Groups
-  // Group 1: Goa Trip
   let goaGroup = await Group.findOne({ name: 'Goa Trip', createdBy: asha._id });
   if (!goaGroup) {
     goaGroup = await Group.create({
@@ -68,13 +64,12 @@ async function seed() {
         { user: bala._id, name: bala.name, role: 'member' },
         { user: charu._id, name: charu.name, role: 'member' },
         { user: dev._id, name: dev.name, role: 'member' },
-        { user: null, name: 'Kavita (offline)', role: 'member' } // placeholder member
+        { user: null, name: 'Kavita (offline)', role: 'member' }
       ],
       invite: { code: generateInviteCode() }
     });
   }
 
-  // Group 2: Flat 402
   let flatGroup = await Group.findOne({ name: 'Flat 402', createdBy: asha._id });
   if (!flatGroup) {
     flatGroup = await Group.create({
@@ -93,7 +88,6 @@ async function seed() {
     });
   }
 
-  // Group 3: Couple Weekend
   let coupleGroup = await Group.findOne({ name: 'Couple Weekend', createdBy: asha._id });
   if (!coupleGroup) {
     coupleGroup = await Group.create({
@@ -111,23 +105,20 @@ async function seed() {
     });
   }
 
-  // Helper to get active members
   const goaMembers = goaGroup.activeMembers();
   const flatMembers = flatGroup.activeMembers();
   const coupleMembers = coupleGroup.activeMembers();
 
-  // 3. Populate Expenses (30+ expenses spread across last 3 months)
   const goaHasExpenses = await Expense.exists({ group: goaGroup._id });
   if (!goaHasExpenses) {
     const goaSpecs = [
-      // Month 1 (approx 65-75 days ago)
+
       { desc: 'Flight tickets booking', amt: 18000, cat: 'transport', payer: 0, date: daysAgo(75), type: 'EQUAL', splits: goaMembers.map(m => ({ member: m._id })) },
       { desc: 'Villa advance deposit', amt: 12000, cat: 'stay', payer: 1, date: daysAgo(70), type: 'EQUAL', splits: goaMembers.map(m => ({ member: m._id })) },
       { desc: 'Airport cab to hotel', amt: 1800, cat: 'transport', payer: 2, date: daysAgo(68), type: 'EQUAL', splits: goaMembers.map(m => ({ member: m._id })) },
       { desc: 'Welcome sea-food dinner', amt: 4200, cat: 'food', payer: 0, date: daysAgo(66), type: 'EQUAL', splits: goaMembers.map(m => ({ member: m._id })) },
       { desc: 'Scooter rentals for 4 days', amt: 3200, cat: 'transport', payer: 3, date: daysAgo(65), type: 'EQUAL', splits: goaMembers.slice(0, 4).map(m => ({ member: m._id })) },
 
-      // Month 2 (approx 35-50 days ago)
       { desc: 'Beach shack lunch & drinks', amt: 3500, cat: 'food', payer: 1, date: daysAgo(48), type: 'EQUAL', splits: goaMembers.map(m => ({ member: m._id })) },
       { desc: 'Scuba diving & water sports', amt: 10000, cat: 'entertainment', payer: 0, date: daysAgo(45), type: 'EXACT', splits: goaMembers.slice(0, 4).map(m => ({ member: m._id, amount: toPaise(2500) })) },
       { desc: 'Supermarket supplies & sunscreen', amt: 2450, cat: 'groceries', payer: 2, date: daysAgo(42), type: 'EQUAL', splits: goaMembers.map(m => ({ member: m._id })) },
@@ -144,7 +135,6 @@ async function seed() {
         { member: goaMembers[3]._id, shares: 1 }
       ] },
 
-      // Month 3 (approx 5-25 days ago)
       { desc: 'Old Goa museum tour tickets', amt: 1200, cat: 'entertainment', payer: 0, date: daysAgo(22), type: 'EQUAL', splits: goaMembers.map(m => ({ member: m._id })) },
       { desc: 'Traditional Goan fish thali', amt: 2800, cat: 'food', payer: 2, date: daysAgo(18), type: 'EQUAL', splits: goaMembers.map(m => ({ member: m._id })) },
       { desc: 'Souvenirs, cashew & feni shopping', amt: 4600, cat: 'shopping', payer: 3, date: daysAgo(12), type: 'EQUAL', splits: goaMembers.map(m => ({ member: m._id })) },
@@ -174,7 +164,6 @@ async function seed() {
         createdBy: creatorUser._id
       });
 
-      // Add a demo comment on certain expenses
       if (item.cat === 'stay') {
         await addExpenseComment(expense, goaGroup, asha, 'Booking confirmed with free breakfast!');
       } else if (item.cat === 'entertainment' && item.amt > 5000) {
@@ -183,23 +172,20 @@ async function seed() {
     }
   }
 
-  // Flat 402 Expenses (Monthly rent, groceries, wifi, electricity across 3 months)
   const flatHasExpenses = await Expense.exists({ group: flatGroup._id });
   if (!flatHasExpenses) {
     const flatSpecs = [
-      // 2 months ago
+
       { desc: 'August High-speed WiFi', amt: 1499, cat: 'bills', payer: 0, date: daysAgo(62) },
       { desc: 'August Groceries & vegetables', amt: 6500, cat: 'groceries', payer: 1, date: daysAgo(58) },
       { desc: 'Electricity bill (August)', amt: 3200, cat: 'bills', payer: 2, date: daysAgo(55) },
       { desc: 'Cleaning supplies & maid fee', amt: 4000, cat: 'general', payer: 0, date: daysAgo(52) },
 
-      // 1 month ago
       { desc: 'September WiFi fiber connection', amt: 1499, cat: 'bills', payer: 0, date: daysAgo(32) },
       { desc: 'September Groceries stockup', amt: 7200, cat: 'groceries', payer: 1, date: daysAgo(28) },
       { desc: 'Electricity bill (September)', amt: 2850, cat: 'bills', payer: 2, date: daysAgo(25) },
       { desc: 'Water purifier filter change', amt: 1800, cat: 'bills', payer: 0, date: daysAgo(22) },
 
-      // Current month
       { desc: 'October WiFi subscription', amt: 1499, cat: 'bills', payer: 0, date: daysAgo(7) },
       { desc: 'Weekly veggies & snacks', amt: 2300, cat: 'groceries', payer: 1, date: daysAgo(5) },
       { desc: 'Piped gas cylinder refill', amt: 1150, cat: 'bills', payer: 2, date: daysAgo(2) }
@@ -226,7 +212,6 @@ async function seed() {
       });
     }
 
-    // Recurring Rent template in Flat 402
     const hasRecurring = await RecurringExpense.exists({ group: flatGroup._id });
     if (!hasRecurring) {
       const rentPaise = toPaise(30000);
@@ -248,7 +233,6 @@ async function seed() {
     }
   }
 
-  // Couple Weekend Expenses
   const coupleHasExpenses = await Expense.exists({ group: coupleGroup._id });
   if (!coupleHasExpenses) {
     const coupleSpecs = [
@@ -280,10 +264,9 @@ async function seed() {
       });
     }
 
-    // Add a settlement in Couple group
     const hasSettlement = await Settlement.exists({ group: coupleGroup._id });
     if (!hasSettlement) {
-      // Settle some balance from Bala to Asha
+
       await Settlement.create({
         group: coupleGroup._id,
         from: coupleMembers[1]._id,
@@ -295,7 +278,6 @@ async function seed() {
         createdBy: bala._id
       });
 
-      // Create a voided/undone settlement in Goa group to test settlement voiding history
       await Settlement.create({
         group: goaGroup._id,
         from: goaMembers[1]._id,
@@ -313,7 +295,6 @@ async function seed() {
     }
   }
 
-  // 4. Print clean summary
   const totalUsers = await User.countDocuments({ email: { $regex: /@example\.com$/ } });
   const totalGroups = await Group.countDocuments({ _id: { $in: [goaGroup._id, flatGroup._id, coupleGroup._id] } });
   const totalExpenses = await Expense.countDocuments({ group: { $in: [goaGroup._id, flatGroup._id, coupleGroup._id] } });

@@ -59,7 +59,7 @@ export async function exportGroupCsv(group, options = {}) {
 
 export async function streamGroupCsv(group, writeStream, options = {}) {
   const filter = buildExportFilter(group, options);
-  writeStream.write('\uFEFF'); // UTF-8 BOM for Excel
+  writeStream.write('\uFEFF');
 
   const headers = ['date', 'description', 'category', 'amount', 'currency', 'paid_by', 'split_type', 'splits', 'notes'];
   writeStream.write(headers.map(csvCell).join(',') + '\r\n');
