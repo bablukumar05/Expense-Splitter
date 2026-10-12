@@ -4,7 +4,7 @@ A modern full-stack web application to split group expenses and settle debts wit
 
 ## Tech Stack
 
-- **Frontend:** React 19, Vite, Tailwind CSS, TanStack React Query
+- **Frontend:** React 18, Vite, Tailwind CSS, TanStack React Query
 - **Backend:** Node.js, Express, MongoDB (Mongoose), JWT, Zod
 
 ## Features
