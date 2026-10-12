@@ -20,6 +20,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/useAuth";
+import Footer from "@/components/Footer";
 import { APP_NAME } from "@/lib/constants";
 import { formatMoney } from "@/lib/format";
 
@@ -760,36 +761,7 @@ export default function Landing() {
       </section>
 
       {/* ---------- FOOTER ---------- */}
-      <footer className="border-t border-slate-200/80 bg-white py-12 text-xs text-slate-500">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-4 sm:flex-row sm:px-6">
-          <div className="flex items-center gap-2">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-600 text-white">
-              <Wallet className="size-3.5" />
-            </span>
-            <span className="font-bold text-slate-800">{APP_NAME}</span>
-            <span className="text-slate-300">·</span>
-            <span>Split expenses, settle smart.</span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-6 text-slate-600">
-            <Link to="/login" className="hover:text-indigo-600">
-              Log in
-            </Link>
-            <Link to="/register" className="hover:text-indigo-600">
-              Create Account
-            </Link>
-            {import.meta.env.DEV && (
-              <Link to="/design" className="hover:text-indigo-600">
-                Design Preview
-              </Link>
-            )}
-          </div>
-
-          <p className="text-slate-400">
-            © {new Date().getFullYear()} {APP_NAME}. Clean Cloud Slate Edition.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
