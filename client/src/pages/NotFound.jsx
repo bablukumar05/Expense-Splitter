@@ -1,6 +1,5 @@
 import { SearchX } from "lucide-react";
-import { Link } from "react-router-dom";
-import Button from "@/components/ui/Button";
+import ButtonLink from "@/components/ui/ButtonLink";
 import EmptyState from "@/components/ui/EmptyState";
 
 export default function NotFound() {
@@ -10,11 +9,7 @@ export default function NotFound() {
         icon={SearchX}
         title="Page not found"
         description="The page you're looking for doesn't exist or was moved."
-        action={
-          <Link to="/">
-            <Button>Go home</Button>
-          </Link>
-        }
+        action={<ButtonLink to="/">Go home</ButtonLink>}
       />
     </main>
   );

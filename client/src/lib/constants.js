@@ -30,3 +30,5 @@ export const typeLabel = (value) =>
 
 export const typeEmoji = (value) =>
   GROUP_TYPES.find((type) => type.value === value)?.emoji ?? "💸";
+
+export const MAX_MEMBERS = 50; // backend ka limit

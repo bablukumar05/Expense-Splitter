@@ -11,8 +11,8 @@ import Modal from "@/components/ui/Modal";
 import SegmentedControl from "@/components/ui/SegmentedControl";
 import Select from "@/components/ui/Select";
 import { useAuth } from "@/features/auth/useAuth";
-import { cn } from "@/lib/cn";
-import { CURRENCIES, GROUP_EMOJIS, GROUP_TYPES, typeEmoji } from "@/lib/constants";
+import { CURRENCIES, GROUP_TYPES, typeEmoji } from "@/lib/constants";
+import EmojiPicker from "./EmojiPicker";
 import { useCreateGroup } from "./hooks";
 import { createGroupSchema } from "./schemas";
 
@@ -129,28 +129,7 @@ export default function CreateGroupModal({ open, onClose }) {
           options={GROUP_TYPES.map(({ value, label }) => ({ value, label }))}
         />
 
-        <fieldset>
-          <legend className="mb-1.5 text-sm font-medium text-ink/90">Icon</legend>
-          <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8">
-            {GROUP_EMOJIS.map((item) => (
-              <button
-                key={item}
-                type="button"
-                aria-pressed={emoji === item}
-                aria-label={`Use ${item} icon`}
-                onClick={() => handleEmojiPick(item)}
-                className={cn(
-                  "flex aspect-square items-center justify-center rounded-xl border text-xl transition",
-                  emoji === item
-                    ? "border-brand bg-brand/20"
-                    : "border-line bg-white/5 hover:bg-white/10"
-                )}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+        <EmojiPicker value={emoji} onPick={handleEmojiPick} />
 
         <Select label="Currency" error={errors.currency?.message} {...register("currency")}>
           {currencies.map((c) => (

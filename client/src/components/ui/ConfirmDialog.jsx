@@ -1,4 +1,5 @@
 import Button from "./Button";
+import FormAlert from "./FormAlert";
 import Modal from "./Modal";
 
 export default function ConfirmDialog({
@@ -10,6 +11,8 @@ export default function ConfirmDialog({
   confirmText = "Confirm",
   tone = "danger",
   loading = false,
+  error = "",
+  children,
 }) {
   return (
     <Modal
@@ -27,7 +30,11 @@ export default function ConfirmDialog({
         </>
       }
     >
-      <p className="text-sm text-muted">{message}</p>
+      <div className="space-y-3">
+        {message && <p className="text-sm text-muted">{message}</p>}
+        {children}
+        <FormAlert>{error}</FormAlert>
+      </div>
     </Modal>
   );
 }

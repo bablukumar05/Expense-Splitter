@@ -7,9 +7,12 @@ import Sidebar from "./Sidebar";
 export default function AppLayout() {
   const { pathname } = useLocation();
 
+  // /groups/<id>/members aur /groups/<id>/balances ek hi "page" hain: tab badalne par scroll na ho
+  const page = pathname.split("/").slice(0, 3).join("/");
+
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [pathname]);
+  }, [page]);
 
   return (
     <div className="min-h-dvh">

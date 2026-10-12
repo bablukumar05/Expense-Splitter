@@ -48,3 +48,16 @@ export const parseMoney = (value) => {
   const n = Number.parseFloat(value);
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : NaN;
 };
+
+// "in 6 days", "in 3 hours", "in 12 minutes". Nikal chuka ho to "expired"
+export const timeUntil = (value) => {
+  const seconds = Math.round((new Date(value).getTime() - Date.now()) / 1000);
+  if (seconds <= 0) return "expired";
+
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "always" });
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return rtf.format(Math.max(minutes, 1), "minute");
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return rtf.format(hours, "hour");
+  return rtf.format(Math.round(hours / 24), "day");
+};
