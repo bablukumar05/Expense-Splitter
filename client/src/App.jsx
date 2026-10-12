@@ -2,12 +2,14 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import GuestRoute from "@/components/GuestRoute";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ServerStatusBanner from "@/components/ServerStatusBanner";
+import AppLayout from "@/components/layout/AppLayout";
 import AppToaster from "@/components/ui/Toaster";
 import AuthProvider from "@/features/auth/AuthProvider";
-import { useAuth } from "@/features/auth/useAuth";
+import Account from "@/pages/Account";
 import Dashboard from "@/pages/Dashboard";
 import DesignPreview from "@/pages/DesignPreview";
 import ForgotPassword from "@/pages/ForgotPassword";
+import GroupPlaceholder from "@/pages/GroupPlaceholder";
 import JoinPlaceholder from "@/pages/JoinPlaceholder";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
@@ -15,22 +17,13 @@ import NotFound from "@/pages/NotFound";
 import Register from "@/pages/Register";
 import ResetPassword from "@/pages/ResetPassword";
 
-function HomeRoute() {
-  const { status } = useAuth();
-  if (status === "authenticated") {
-    return <Dashboard />;
-  }
-  return <Landing />;
-}
-
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <ServerStatusBanner />
         <Routes>
-          {/* Public Home & Landing */}
-          <Route path="/" element={<HomeRoute />} />
+          {/* Landing page */}
           <Route path="/landing" element={<Landing />} />
 
           {/* Sirf logged-out users */}
@@ -47,7 +40,11 @@ export default function App() {
 
           {/* Login zaroori */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/groups/:groupId" element={<GroupPlaceholder />} />
+              <Route path="/account" element={<Account />} />
+            </Route>
             <Route path="/join/:code" element={<JoinPlaceholder />} />
           </Route>
 

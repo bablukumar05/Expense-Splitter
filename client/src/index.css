@@ -140,3 +140,13 @@
 @utility safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* Summary card ke kone mein halka glow (blur filter nahi, sasta hai) */
+@utility hero-glow {
+  background: radial-gradient(closest-side, rgb(124 92 255 / 0.35), transparent);
+}
+
+/* Mobile par content bottom tab bar ke neeche na chhupe (56px bar + safe-area + thoda gap) */
+@utility nav-clearance {
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+}

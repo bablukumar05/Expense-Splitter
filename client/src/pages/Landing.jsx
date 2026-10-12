@@ -2,27 +2,22 @@ import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
-  ArrowUpRight,
   Check,
   CheckCircle2,
   ChevronRight,
   FileText,
-  HelpCircle,
   PieChart,
   Receipt,
   RefreshCw,
   Share2,
-  ShieldCheck,
   Sliders,
   Sparkles,
-  Users,
   Wallet,
   Zap,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/useAuth";
 import Footer from "@/components/Footer";
 import { APP_NAME } from "@/lib/constants";
-import { formatMoney } from "@/lib/format";
 
 const demoEmail = import.meta.env.VITE_DEMO_EMAIL;
 const demoPassword = import.meta.env.VITE_DEMO_PASSWORD;
