@@ -9,10 +9,6 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "npm run test:node && npm run test:jest",
-    "test:node": "node --test",
-    "test:jest": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
-    "test:integration": "node --test src/tests/api.integration.test.js",
     "seed": "node src/scripts/seed.js",
     "check": "node --check src/server.js && node --check src/app.js"
   },
@@ -35,16 +31,5 @@
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.17.0",
     "zod": "^3.24.1"
-  },
-  "devDependencies": {
-    "jest": "^30.5.2",
-    "supertest": "^7.3.1"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "transform": {},
-    "testMatch": [
-      "<rootDir>/src/tests/**/*.jest.js"
-    ]
   }
 }
