@@ -22,7 +22,7 @@ A modern, full-stack group expense sharing and financial settlement platform bui
 - **Forms & Validation:** React Hook Form, Zod
 
 ### Backend (`server/`)
-- **Runtime:** Node.js, Express.js
+- **Runtime:** Node.js (v20+), Express.js
 - **Database:** MongoDB via Mongoose
 - **Auth & Security:** JWT (Access & Refresh tokens), bcrypt, Helmet, Rate Limiting
 - **File Uploads & Media:** Multer, Cloudinary
@@ -59,10 +59,9 @@ A modern, full-stack group expense sharing and financial settlement platform bui
 ```bash
 cd server
 npm install
-cp .env.example .env # configure your MongoDB URI and JWT secrets
 npm run dev
 ```
-The server will start on `http://localhost:5000` (API documentation available at `http://localhost:5000/api/docs`).
+The server will start on `http://localhost:5000` (interactive API documentation available at `http://localhost:5000/api/docs`).
 
 ### 2. Frontend Setup
 ```bash
@@ -71,6 +70,20 @@ npm install
 npm run dev
 ```
 The client application will start on `http://localhost:5173`.
+
+## Core API Endpoints
+
+| Resource | Route | Description |
+| :--- | :--- | :--- |
+| **Auth** | `/api/auth` | User registration, login, logout, refresh token, password reset |
+| **Users** | `/api/users` | Profile management, personal balances, notification settings |
+| **Groups** | `/api/groups` | Group CRUD, member management, invite links, roles |
+| **Expenses** | `/api/expenses` | Add, update, delete shared expenses, receipts, comments |
+| **Balances** | `/api/groups/:id/balances` | Real-time group balances and debt simplification plan |
+| **Settlements**| `/api/settlements` | Record debt payments and settle-up transactions |
+| **Analytics** | `/api/groups/:id/stats` | Spending breakdowns, trends, and category distribution |
+| **Exports** | `/api/groups/:id/export` | Download expenses in CSV or PDF formats |
+| **Invites** | `/api/invite` | Public group preview and join by code |
 
 ## License
 
