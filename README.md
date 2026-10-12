@@ -42,14 +42,15 @@ A modern, full-stack group expense sharing and financial settlement platform bui
 │   │   ├── lib/          # Utilities and query client
 │   │   └── pages/        # Route pages
 ├── server/          # Backend REST API
-│   ├── src/
-│   │   ├── config/       # Environment, database, cloud configurations
-│   │   ├── controllers/  # Route controller logic
-│   │   ├── middleware/   # Auth, validation, error handling
-│   │   ├── models/       # Mongoose schemas
-│   │   ├── routes/       # API endpoints
-│   │   ├── services/     # Core business logic & algorithms
-│   │   └── utils/        # Mathematical helpers & formatters
+│   ├── config/       # Environment, database, cloud configurations
+│   ├── controllers/  # Route controller logic
+│   ├── middleware/   # Auth, validation, error handling
+│   ├── models/       # Mongoose schemas
+│   ├── routes/       # API endpoints
+│   ├── services/     # Core business logic & algorithms
+│   ├── utils/        # Mathematical helpers & formatters
+│   ├── server.js     # Server entry point
+│   └── app.js        # Express app definition
 └── README.md
 ```
 

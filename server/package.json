@@ -7,10 +7,10 @@
     "node": ">=20"
   },
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
-    "seed": "node src/scripts/seed.js",
-    "check": "node --check src/server.js && node --check src/app.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node scripts/seed.js",
+    "check": "node --check server.js && node --check app.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
