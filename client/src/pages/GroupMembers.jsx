@@ -168,7 +168,6 @@ export default function GroupMembers() {
         loading={busy}
         error={actionError}
       >
-        {/* Backend balance 0 na hone par rokta hai: seedha Balances tab ka rasta */}
         {actionError.toLowerCase().includes("unsettled") && (
           <Link
             to={`/groups/${group._id}/balances`}

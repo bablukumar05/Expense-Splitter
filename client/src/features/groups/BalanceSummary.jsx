@@ -79,7 +79,7 @@ export default function BalanceSummary({ summary, loading, error, onRetry }) {
   }
 
   const entries = Object.entries(summary ?? {});
-  if (entries.length === 0) return null; // koi group nahi, to summary ka matlab nahi
+  if (entries.length === 0) return null;
 
   return (
     <div className={cn("grid gap-4", entries.length > 1 && "md:grid-cols-2")}>

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowRight,
   CheckCircle2,
   Globe,
   Heart,
@@ -126,11 +125,9 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* ---------- NAVIGATION LINKS GRID ---------- */}
       <div className="py-14">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5">
-            {/* Column 1: Product */}
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
                 Product
@@ -170,7 +167,6 @@ export default function Footer() {
               </ul>
             </div>
 
-            {/* Column 2: Use Cases */}
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
                 Use Cases
@@ -209,7 +205,6 @@ export default function Footer() {
               </ul>
             </div>
 
-            {/* Column 3: Quick Access */}
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
                 Account & App
@@ -235,21 +230,9 @@ export default function Footer() {
                     Reset Password
                   </Link>
                 </li>
-                {import.meta.env.DEV && (
-                  <li>
-                    <Link
-                      to="/design"
-                      className="inline-flex items-center gap-1 text-indigo-600 hover:underline font-semibold"
-                    >
-                      <span>Design Preview</span>
-                      <ArrowRight className="size-3" />
-                    </Link>
-                  </li>
-                )}
               </ul>
             </div>
 
-            {/* Column 4: Technology */}
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
                 Stack & Docs
@@ -292,7 +275,6 @@ export default function Footer() {
               </ul>
             </div>
 
-            {/* Column 5: Trust & Guarantee */}
             <div className="col-span-2 md:col-span-4 lg:col-span-1">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
                 Trust & Security
@@ -316,10 +298,8 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* ---------- BOTTOM BAR ---------- */}
       <div className="border-t border-slate-200/80 bg-slate-50/50 py-6">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-xs text-slate-500 sm:flex-row sm:px-6">
-          {/* Copyright & tag */}
           <div className="flex flex-wrap items-center justify-center gap-2 text-center sm:text-left">
             <span>© {new Date().getFullYear()} {APP_NAME} Technologies.</span>
             <span className="hidden sm:inline text-slate-300">·</span>
@@ -329,14 +309,12 @@ export default function Footer() {
             </span>
           </div>
 
-          {/* Region / Currency Pill */}
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-2xs">
               <Globe className="size-3 text-slate-400" />
               <span>India · INR (₹)</span>
             </span>
 
-            {/* Social Icons */}
             <div className="flex items-center gap-1.5 text-slate-400">
               <a
                 href="https://github.com"
