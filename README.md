@@ -1,90 +1,62 @@
-# Splitly - Smart Expense Splitting & Debt Settlement
+# Splitly
 
-A modern, full-stack group expense sharing and financial settlement platform built with React, Vite, Node.js, Express, and MongoDB.
-
-## Features
-
-- **Group Management:** Create trips, household, or event groups with custom currencies and icons.
-- **Flexible Splitting:** Split by equal shares, exact amounts, percentages, or weighted shares.
-- **Debt Simplification:** Graph-based debt minimization algorithm reduces the total transactions needed to settle up.
-- **Multi-Payer Support:** Support for multiple people paying for a single transaction.
-- **Invites & Deep Links:** Shareable invite codes and direct links with QR codes and member previews.
-- **Activity & Analytics:** Real-time balance calculations, spending categories, PDF/CSV export, and activity audit trails.
-- **Responsive UI:** Modern design with light slate surfaces, mobile tab navigation, and desktop sidebar layouts.
+A modern full-stack web application to split group expenses and settle debts with the fewest transactions.
 
 ## Tech Stack
 
-### Frontend (`client/`)
-- **Framework:** React 19, Vite
-- **Styling:** Tailwind CSS v4, Lucide Icons
-- **State & Data Fetching:** TanStack React Query v5
-- **Routing:** React Router v7
-- **Forms & Validation:** React Hook Form, Zod
+- **Frontend:** React 19, Vite, Tailwind CSS, TanStack React Query
+- **Backend:** Node.js, Express, MongoDB (Mongoose), JWT, Zod
 
-### Backend (`server/`)
-- **Runtime:** Node.js (v20+), Express.js
-- **Database:** MongoDB via Mongoose
-- **Auth & Security:** JWT (Access & Refresh tokens), bcrypt, Helmet, Rate Limiting
-- **File Uploads & Media:** Multer, Cloudinary
-- **Exports:** PDFKit (PDF reports), CSV generation
-- **Documentation:** OpenAPI / Swagger UI
+## Features
 
-## Repository Layout
+- **Group Expenses:** Create groups, add members, and split expenses equally, by exact amounts, percentages, or shares.
+- **Smart Debt Simplification:** Graph-based minimization algorithm reduces overall payment transactions.
+- **Invite Links & QR:** Shareable group invite links with instant member previews.
+- **Analytics & Exports:** Visual spending breakdowns and PDF/CSV export support.
 
-```text
-.
-├── client/          # Frontend React SPA
-│   ├── src/
-│   │   ├── api/          # API integration layer
-│   │   ├── components/   # Reusable UI primitives & layouts
-│   │   ├── features/     # Feature-scoped components and hooks
-│   │   ├── hooks/        # Shared custom hooks
-│   │   ├── lib/          # Utilities and query client
-│   │   └── pages/        # Route pages
-├── server/          # Backend REST API
-│   ├── config/       # Environment, database, cloud configurations
-│   ├── controllers/  # Route controller logic
-│   ├── middleware/   # Auth, validation, error handling
-│   ├── models/       # Mongoose schemas
-│   ├── routes/       # API endpoints
-│   ├── services/     # Core business logic & algorithms
-│   ├── utils/        # Mathematical helpers & formatters
-│   ├── server.js     # Server entry point
-│   └── app.js        # Express app definition
-└── README.md
-```
+## Getting Started
 
-## Quick Start
+### Prerequisites
+
+- Node.js (v20+)
+- MongoDB database (local or MongoDB Atlas)
 
 ### 1. Backend Setup
+
 ```bash
 cd server
 npm install
 npm run dev
 ```
-The server will start on `http://localhost:5000` (interactive API documentation available at `http://localhost:5000/api/docs`).
+
+Server runs on `http://localhost:5000` (API documentation: `http://localhost:5000/api/docs`).
 
 ### 2. Frontend Setup
+
 ```bash
 cd client
 npm install
 npm run dev
 ```
-The client application will start on `http://localhost:5173`.
 
-## Core API Endpoints
+Client runs on `http://localhost:5173`.
 
-| Resource | Route | Description |
-| :--- | :--- | :--- |
-| **Auth** | `/api/auth` | User registration, login, logout, refresh token, password reset |
-| **Users** | `/api/users` | Profile management, personal balances, notification settings |
-| **Groups** | `/api/groups` | Group CRUD, member management, invite links, roles |
-| **Expenses** | `/api/expenses` | Add, update, delete shared expenses, receipts, comments |
-| **Balances** | `/api/groups/:id/balances` | Real-time group balances and debt simplification plan |
-| **Settlements**| `/api/settlements` | Record debt payments and settle-up transactions |
-| **Analytics** | `/api/groups/:id/stats` | Spending breakdowns, trends, and category distribution |
-| **Exports** | `/api/groups/:id/export` | Download expenses in CSV or PDF formats |
-| **Invites** | `/api/invite` | Public group preview and join by code |
+## Environment Variables
+
+**Backend (`server/.env`):**
+```env
+PORT=5000
+NODE_ENV=development
+MONGO_URI=your_mongodb_connection_string
+JWT_ACCESS_SECRET=your_jwt_access_secret
+JWT_REFRESH_SECRET=your_jwt_refresh_secret
+CLIENT_URL=http://localhost:5173
+```
+
+**Frontend (`client/.env`):**
+```env
+VITE_API_URL=http://localhost:5000/api
+```
 
 ## License
 
