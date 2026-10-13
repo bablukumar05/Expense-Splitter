@@ -6,9 +6,22 @@ export const groupStatsSchema = {
   query: z.object({
     fromDate: z.coerce.date().optional(),
     toDate: z.coerce.date().optional(),
+    from: z.string().optional(),
+    to: z.string().optional(),
     category: z.string().trim().optional(),
     timezone: z.string().trim().default('Asia/Kolkata')
-  }).optional()
+  }).passthrough().optional()
+};
+
+export const userStatsSchema = {
+  query: z.object({
+    fromDate: z.coerce.date().optional(),
+    toDate: z.coerce.date().optional(),
+    from: z.string().optional(),
+    to: z.string().optional(),
+    category: z.string().trim().optional(),
+    timezone: z.string().trim().default('Asia/Kolkata')
+  }).passthrough().optional()
 };
 
 export const exportGroupSchema = {
@@ -17,7 +30,9 @@ export const exportGroupSchema = {
     format: z.enum(['csv', 'pdf']).default('csv'),
     fromDate: z.coerce.date().optional(),
     toDate: z.coerce.date().optional(),
+    from: z.string().optional(),
+    to: z.string().optional(),
     category: z.string().trim().optional(),
     member: objectId.optional()
-  })
+  }).passthrough().optional()
 };

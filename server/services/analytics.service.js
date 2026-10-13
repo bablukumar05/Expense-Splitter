@@ -50,7 +50,9 @@ function fillMonthlyGaps(monthlyMap, fromDate, toDate) {
 }
 
 export async function getGroupStats(group, options = {}) {
-  const { fromDate, toDate, category, timezone = 'Asia/Kolkata' } = options;
+  const fromDate = options.fromDate || options.from;
+  const toDate = options.toDate || options.to;
+  const { category, timezone = 'Asia/Kolkata' } = options;
   const match = expenseMatch(group._id);
 
   if (category) match.category = category;
@@ -198,6 +200,8 @@ export async function getGroupStats(group, options = {}) {
 }
 
 export async function getUserStats(userId, options = {}) {
+  const fromDate = options.fromDate || options.from;
+  const toDate = options.toDate || options.to;
   const { timezone = 'Asia/Kolkata' } = options;
   const groups = await Group.find({
     isArchived: false,
@@ -213,9 +217,16 @@ export async function getUserStats(userId, options = {}) {
   const memberIds = memberPairs.map(({ member }) => member._id);
   const groupById = new Map(memberPairs.map(({ group }) => [String(group._id), group]));
 
+  const baseMatch = { group: { $in: groups.map((group) => group._id) }, isDeleted: false };
+  if (fromDate || toDate) {
+    baseMatch.date = {};
+    if (fromDate) baseMatch.date.$gte = new Date(fromDate);
+    if (toDate) baseMatch.date.$lte = new Date(toDate);
+  }
+
   const [spendRows, payerRows, monthRows, categoryRows] = await Promise.all([
     Expense.aggregate([
-      { $match: { group: { $in: groups.map((group) => group._id) }, isDeleted: false } },
+      { $match: baseMatch },
       { $unwind: '$splits' },
       { $match: { 'splits.member': { $in: memberIds } } },
       { $group: {
@@ -224,7 +235,7 @@ export async function getUserStats(userId, options = {}) {
       } }
     ]),
     Expense.aggregate([
-      { $match: { group: { $in: groups.map((group) => group._id) }, isDeleted: false } },
+      { $match: baseMatch },
       { $unwind: '$paidBy' },
       { $match: { 'paidBy.member': { $in: memberIds } } },
       { $group: {
@@ -233,7 +244,7 @@ export async function getUserStats(userId, options = {}) {
       } }
     ]),
     Expense.aggregate([
-      { $match: { group: { $in: groups.map((group) => group._id) }, isDeleted: false } },
+      { $match: baseMatch },
       { $unwind: '$splits' },
       { $match: { 'splits.member': { $in: memberIds } } },
       { $group: {
@@ -246,7 +257,7 @@ export async function getUserStats(userId, options = {}) {
       } }
     ]),
     Expense.aggregate([
-      { $match: { group: { $in: groups.map((group) => group._id) }, isDeleted: false } },
+      { $match: baseMatch },
       { $unwind: '$splits' },
       { $match: { 'splits.member': { $in: memberIds } } },
       { $group: {

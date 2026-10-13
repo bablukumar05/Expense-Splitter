@@ -6,12 +6,13 @@ import { changePasswordRequest, updateProfileRequest } from '../validators/userV
 import { getMyBalances } from '../controllers/balance.controller.js';
 import { emptyRequest } from '../validators/common.js';
 import { getMyStats } from '../controllers/analytics.controller.js';
+import { userStatsSchema } from '../validators/analytics.validator.js';
 
 const router = Router();
 
 router.use(authenticate);
 router.get('/me/balances', validate(emptyRequest), getMyBalances);
-router.get('/me/stats', validate(emptyRequest), getMyStats);
+router.get('/me/stats', validate(userStatsSchema), getMyStats);
 router.patch('/me', validate(updateProfileRequest), updateMe);
 router.patch('/change-password', validate(changePasswordRequest), updatePassword);
 
