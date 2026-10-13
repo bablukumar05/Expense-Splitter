@@ -300,11 +300,10 @@ export default function Footer() {
       <div className="border-t border-slate-200/80 bg-slate-50/50 py-6">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-xs text-slate-500 sm:flex-row sm:px-6">
           <div className="flex flex-wrap items-center justify-center gap-2 text-center sm:text-left">
-            <span>© {new Date().getFullYear()} {APP_NAME} Technologies.</span>
+            <span>© {new Date().getFullYear()} {APP_NAME}. Designed & Built by <a href="https://github.com/bablukumar05" target="_blank" rel="noreferrer" className="font-semibold text-slate-800 underline decoration-indigo-300 underline-offset-2 hover:text-indigo-600 transition">Bablu Kumar</a>.</span>
             <span className="hidden sm:inline text-slate-300">·</span>
             <span className="inline-flex items-center gap-1 text-slate-600">
-              Made with <Heart className="size-3 fill-rose-500 text-rose-500" /> for hassle-free
-              trips & flats.
+              Made with <Heart className="size-3 fill-rose-500 text-rose-500" /> by Bablu Kumar for hassle-free trips & flats.
             </span>
           </div>
 
@@ -316,22 +315,13 @@ export default function Footer() {
 
             <div className="flex items-center gap-1.5 text-slate-400">
               <a
-                href="https://github.com/bablukumar05/Expense-Splitter"
+                href="https://github.com/bablukumar05"
                 target="_blank"
                 rel="noreferrer"
-                aria-label="GitHub repository"
+                aria-label="Bablu Kumar on GitHub"
                 className="rounded-lg p-1.5 transition hover:bg-slate-200/60 hover:text-slate-800"
               >
                 <GithubIcon className="size-4" />
-              </a>
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Twitter community"
-                className="rounded-lg p-1.5 transition hover:bg-slate-200/60 hover:text-slate-800"
-              >
-                <TwitterIcon className="size-4" />
               </a>
             </div>
           </div>
