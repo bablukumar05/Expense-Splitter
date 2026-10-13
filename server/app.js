@@ -43,8 +43,19 @@ app.use(helmet({
 }));
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || env.CORS_ORIGINS.includes(origin)) return callback(null, true);
-    return callback(new Error('Origin is not allowed by CORS'));
+    if (!origin) return callback(null, true);
+    const cleanOrigin = origin.replace(/\/$/, '');
+    const isAllowedOrigin =
+      env.CORS_ORIGINS.some((allowed) => allowed.replace(/\/$/, '') === cleanOrigin) ||
+      (env.FRONTEND_URL && env.FRONTEND_URL.replace(/\/$/, '') === cleanOrigin) ||
+      cleanOrigin.endsWith('.vercel.app') ||
+      cleanOrigin.includes('localhost') ||
+      cleanOrigin.includes('127.0.0.1');
+
+    if (isAllowedOrigin) {
+      return callback(null, true);
+    }
+    return callback(null, false);
   },
   credentials: true,
   exposedHeaders: ['Content-Disposition']
