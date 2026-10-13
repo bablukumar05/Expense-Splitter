@@ -241,7 +241,7 @@ export default function Footer() {
                 <li>
                   <span className="inline-flex items-center gap-1.5 text-slate-600">
                     <span className="size-1.5 rounded-full bg-emerald-500" />
-                    React 19 + Vite 6
+                    React 18 + Vite
                   </span>
                 </li>
                 <li>
@@ -316,7 +316,7 @@ export default function Footer() {
 
             <div className="flex items-center gap-1.5 text-slate-400">
               <a
-                href="https://github.com"
+                href="https://github.com/bablukumar05/Expense-Splitter"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="GitHub repository"
