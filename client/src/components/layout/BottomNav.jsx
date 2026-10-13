@@ -23,7 +23,8 @@ export default function BottomNav() {
                   active ? "text-ink" : "text-muted hover:text-ink"
                 )}
               >
-                <Icon className={cn("size-5", active && "text-violet-300")} aria-hidden="true" />
+                <Icon className={cn("size-5", active && "text-blue-400")} aria-hidden="true" />
+
                 {label}
               </Link>
             </li>

@@ -10,6 +10,7 @@ const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 function publicUser(user) {
   return {
     id: user.id,
+    _id: user.id,
     name: user.name,
     email: user.email,
     avatar: user.avatar,

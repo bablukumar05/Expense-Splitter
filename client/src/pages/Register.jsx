@@ -52,6 +52,7 @@ export default function Register() {
     <AuthLayout
       title="Create your account"
       subtitle="Start splitting expenses in under a minute"
+      badge="SPLITLY • GET STARTED"
       footer={
         <>
           Already have an account?{" "}
@@ -67,20 +68,20 @@ export default function Register() {
         <Input
           label="Full name"
           autoComplete="name"
-          placeholder="Your name"
+          placeholder="Your full name"
           icon={User}
           error={errors.name?.message}
           {...register("name")}
         />
 
         <Input
-          label="Email"
+          label="Email address"
           type="email"
           inputMode="email"
           autoComplete="email"
           autoCapitalize="none"
           spellCheck={false}
-          placeholder="you@example.com"
+          placeholder="name@email.com"
           icon={Mail}
           error={errors.email?.message}
           {...register("email")}
@@ -105,7 +106,12 @@ export default function Register() {
           {...register("confirmPassword")}
         />
 
-        <Button type="submit" fullWidth loading={isSubmitting}>
+        <Button
+          type="submit"
+          fullWidth
+          loading={isSubmitting}
+          className="h-11 sm:h-12 bg-gradient-to-r from-blue-500 via-sky-500 to-blue-600 hover:from-blue-600 hover:to-sky-500 text-white shadow-lg shadow-blue-500/25 rounded-xl font-semibold"
+        >
           Create account
         </Button>
       </form>

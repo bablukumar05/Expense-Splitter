@@ -25,6 +25,8 @@ export default function AuthProvider({ children }) {
     setState({ status: "unauthenticated", user: null });
   }, []);
 
+  const normalizeUser = (u) => (u ? { ...u, _id: u._id || u.id, id: u.id || u._id } : null);
+
   const bootstrap = useCallback(async () => {
     if (!getRefreshToken()) {
       setState({ status: "unauthenticated", user: null });
@@ -33,7 +35,7 @@ export default function AuthProvider({ children }) {
     try {
       await refreshSession();
       const { user } = await authApi.me();
-      setState({ status: "authenticated", user });
+      setState({ status: "authenticated", user: normalizeUser(user) });
     } catch (error) {
       if (error instanceof SessionExpiredError || (error instanceof ApiError && error.status === 401)) {
         endSession();
@@ -71,8 +73,9 @@ export default function AuthProvider({ children }) {
     setAccessToken(accessToken);
     setRefreshToken(refreshToken);
     queryClient.clear();
-    setState({ status: "authenticated", user });
-    return user;
+    const cleanUser = normalizeUser(user);
+    setState({ status: "authenticated", user: cleanUser });
+    return cleanUser;
   }, []);
 
   const login = useCallback(async (credentials) => startSession(await authApi.login(credentials)), [startSession]);
@@ -89,7 +92,7 @@ export default function AuthProvider({ children }) {
     return bootstrap();
   }, [bootstrap]);
 
-  const updateUser = useCallback((user) => setState((prev) => ({ ...prev, user })), []);
+  const updateUser = useCallback((user) => setState((prev) => ({ ...prev, user: normalizeUser(user) })), []);
 
   const value = useMemo(
     () => ({ status: state.status, user: state.user, login, signup, logout, retry, updateUser }),

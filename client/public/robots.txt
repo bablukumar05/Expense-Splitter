@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /groups/
+Disallow: /account
+Disallow: /insights

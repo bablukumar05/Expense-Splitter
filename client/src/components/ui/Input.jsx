@@ -88,3 +88,5 @@ export const Textarea = forwardRef(function Textarea(
     </div>
   );
 });
+
+export default Input;

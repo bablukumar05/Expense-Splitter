@@ -54,6 +54,7 @@ export default function ResetPassword() {
     <AuthLayout
       title="Set a new password"
       subtitle="Choose a strong password you haven't used before"
+      badge="SPLITLY • SECURITY"
       footer={
         <Link to="/login" className={linkClass}>
           Back to log in
@@ -90,7 +91,12 @@ export default function ResetPassword() {
           {...register("confirmPassword")}
         />
 
-        <Button type="submit" fullWidth loading={isSubmitting}>
+        <Button
+          type="submit"
+          fullWidth
+          loading={isSubmitting}
+          className="h-11 sm:h-12 bg-gradient-to-r from-blue-500 via-sky-500 to-blue-600 hover:from-blue-600 hover:to-sky-500 text-white shadow-lg shadow-blue-500/25 rounded-xl font-semibold"
+        >
           Update password
         </Button>
       </form>

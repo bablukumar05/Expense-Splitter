@@ -10,6 +10,16 @@ const GATEWAY_ERRORS = [502, 503, 504];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+async function parseBlobError(error) {
+  const data = error?.response?.data;
+  if (typeof Blob !== "undefined" && data instanceof Blob && data.type.includes("json")) {
+    try {
+      error.response.data = JSON.parse(await data.text());
+    } catch {
+    }
+  }
+}
+
 let accessToken = null;
 
 export const setAccessToken = (token) => {
@@ -105,6 +115,7 @@ const isRetryable = (error) => {
 
 api.interceptors.response.use(onResponse, async (error) => {
   trackError(error);
+  await parseBlobError(error);
   if (axios.isCancel(error)) return Promise.reject(error);
 
   const config = error.config;

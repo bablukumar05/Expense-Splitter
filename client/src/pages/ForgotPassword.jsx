@@ -71,25 +71,31 @@ export default function ForgotPassword() {
     <AuthLayout
       title="Forgot your password?"
       subtitle="Enter your email and we'll send you a reset link"
+      badge="SPLITLY • RECOVERY"
       footer={footer}
     >
       <form onSubmit={handleSubmit(send)} noValidate className="space-y-4">
         <FormAlert>{formError}</FormAlert>
 
         <Input
-          label="Email"
+          label="Email address"
           type="email"
           inputMode="email"
           autoComplete="email"
           autoCapitalize="none"
           spellCheck={false}
-          placeholder="you@example.com"
+          placeholder="name@email.com"
           icon={Mail}
           error={errors.email?.message}
           {...register("email")}
         />
 
-        <Button type="submit" fullWidth loading={isSubmitting}>
+        <Button
+          type="submit"
+          fullWidth
+          loading={isSubmitting}
+          className="h-11 sm:h-12 bg-gradient-to-r from-blue-500 via-sky-500 to-blue-600 hover:from-blue-600 hover:to-sky-500 text-white shadow-lg shadow-blue-500/25 rounded-xl font-semibold"
+        >
           Send reset link
         </Button>
       </form>

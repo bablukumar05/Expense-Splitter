@@ -5,7 +5,7 @@ import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 
-import { parseInviteCode } from "./utils";
+import { parseInviteCode } from "./invite";
 
 export default function JoinGroupModal({ open, onClose }) {
   const navigate = useNavigate();

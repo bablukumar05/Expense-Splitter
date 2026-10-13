@@ -10,9 +10,10 @@ export default function GuestRoute() {
 
   if (status === "authenticated") {
     const from = location.state?.from;
-    const target = from ? `${from.pathname}${from.search ?? ""}${from.hash ?? ""}` : "/";
+    const target = from ? `${from.pathname}${from.search ?? ""}${from.hash ?? ""}` : "/dashboard";
     return <Navigate to={target} replace />;
   }
+
 
   return <Outlet />;
 }

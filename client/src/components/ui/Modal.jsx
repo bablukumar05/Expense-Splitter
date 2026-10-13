@@ -1,7 +1,8 @@
 import { useEffect, useId, useRef } from "react";
 import { X } from "lucide-react";
+import { cn } from "@/lib/cn";
 
-export default function Modal({ open, onClose, title, children, footer }) {
+export default function Modal({ open, onClose, title, children, footer, className }) {
   const ref = useRef(null);
   const titleId = useId();
 
@@ -37,11 +38,11 @@ export default function Modal({ open, onClose, title, children, footer }) {
       onClose={() => open && onClose()}
       onClick={(e) => e.target === ref.current && onClose()}
       aria-labelledby={titleId}
-      className={
-        "mx-auto mb-0 mt-auto w-full max-w-none rounded-t-3xl border border-line bg-canvas-2 p-0 text-ink " +
-        "shadow-2xl backdrop:bg-black/60 backdrop:backdrop-blur-sm open:animate-sheet-in " +
-        "sm:my-auto sm:max-w-lg sm:rounded-3xl"
-      }
+      aria-modal="true"
+      className={cn(
+        "mx-auto mb-0 mt-auto w-full max-w-none rounded-t-3xl border border-line bg-canvas-2 p-0 text-ink shadow-2xl backdrop:bg-black/60 backdrop:backdrop-blur-sm open:animate-sheet-in sm:my-auto sm:max-w-lg sm:rounded-3xl",
+        className
+      )}
     >
       <div className="safe-bottom max-h-[88dvh] overflow-y-auto" onFocus={handleFocus}>
         <div className="sticky top-0 z-10 bg-canvas-2/95 px-5 pb-3 pt-2 backdrop-blur sm:pt-5">

@@ -285,8 +285,7 @@ export default function Footer() {
                   <span>Integer Math Guarantee</span>
                 </div>
                 <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                  Every split calculation is stored in discrete paise units. 1 paisa bhi idhar-udhar
-                  nahi hota.
+                  Every split calculation is stored in discrete paise units with zero rounding error.
                 </p>
                 <div className="mt-2.5 flex items-center gap-1 text-[10px] font-semibold text-slate-400">
                   <Lock className="size-3 text-slate-400" />

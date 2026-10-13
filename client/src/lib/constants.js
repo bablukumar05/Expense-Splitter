@@ -31,3 +31,31 @@ export const typeEmoji = (value) =>
   GROUP_TYPES.find((type) => type.value === value)?.emoji ?? "💸";
 
 export const MAX_MEMBERS = 50;
+
+export const CATEGORIES = [
+  { value: "general", label: "General", emoji: "🧾" },
+  { value: "food", label: "Food & drinks", emoji: "🍽️" },
+  { value: "groceries", label: "Groceries", emoji: "🛒" },
+  { value: "transport", label: "Transport", emoji: "🚕" },
+  { value: "travel", label: "Travel", emoji: "✈️" },
+  { value: "stay", label: "Stay", emoji: "🏨" },
+  { value: "entertainment", label: "Entertainment", emoji: "🎬" },
+  { value: "shopping", label: "Shopping", emoji: "🛍️" },
+  { value: "bills", label: "Bills", emoji: "💡" },
+  { value: "rent", label: "Rent", emoji: "🏠" },
+  { value: "health", label: "Health", emoji: "💊" },
+  { value: "other", label: "Other", emoji: "📦" },
+];
+
+export const categoryOf = (value) =>
+  CATEGORIES.find((category) => category.value === value) ?? CATEGORIES[CATEGORIES.length - 1];
+
+export const SPLIT_TYPES = [
+  { value: "EQUAL", label: "Equally", full: "Split equally", hint: "Everyone selected pays the same share." },
+  { value: "EXACT", label: "Exact", full: "Exact amounts", hint: "Enter exactly how much each person owes." },
+  { value: "PERCENTAGE", label: "Percent", full: "By percentage", hint: "Split by percentage. It must add up to 100%." },
+  { value: "SHARES", label: "Shares", full: "By shares", hint: "Split in proportion to shares. 2 shares pays double of 1." },
+];
+
+export const splitTypeLabel = (value) =>
+  SPLIT_TYPES.find((type) => type.value === value)?.full ?? value;

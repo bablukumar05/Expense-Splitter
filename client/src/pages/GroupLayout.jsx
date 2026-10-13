@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { AlertCircle, SearchX } from "lucide-react";
-import { Outlet, useParams } from "react-router-dom";
+import { Outlet, useLocation, useParams } from "react-router-dom";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import PageFallback from "@/components/PageFallback";
 import Button from "@/components/ui/Button";
 import ButtonLink from "@/components/ui/ButtonLink";
 import EmptyState from "@/components/ui/EmptyState";
@@ -33,6 +35,7 @@ function GroupSkeleton() {
 
 export default function GroupLayout() {
   const { groupId } = useParams();
+  const { pathname } = useLocation();
   const { user } = useAuth();
   const query = useGroup(groupId);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -50,7 +53,7 @@ export default function GroupLayout() {
           icon={SearchX}
           title="Group not found"
           description="This group doesn't exist, was deleted, or you're no longer a member."
-          action={<ButtonLink to="/">Back to my groups</ButtonLink>}
+          action={<ButtonLink to="/dashboard">Back to my groups</ButtonLink>}
         />
       );
     }
@@ -64,14 +67,25 @@ export default function GroupLayout() {
     );
   }
 
-  const me = group.members.find((member) => member.user?._id === user._id);
+  const myId = String(user?._id || user?.id || "");
+  const me = group.members.find((member) => {
+    const memberUserId = String(
+      member.user?._id ||
+      member.user?.id ||
+      (typeof member.user === "string" ? member.user : "") ||
+      ""
+    );
+    if (myId && memberUserId && memberUserId === myId) return true;
+    if (user?.email && member.user?.email && member.user.email.toLowerCase() === user.email.toLowerCase()) return true;
+    return false;
+  });
   if (!me) {
     return (
       <EmptyState
         icon={SearchX}
         title="You're no longer a member"
         description="You don't have access to this group anymore."
-        action={<ButtonLink to="/">Back to my groups</ButtonLink>}
+        action={<ButtonLink to="/dashboard">Back to my groups</ButtonLink>}
       />
     );
   }
@@ -80,11 +94,15 @@ export default function GroupLayout() {
 
   return (
     <>
-      <GroupHeader group={group} isAdmin={isAdmin} onInvite={() => setInviteOpen(true)} />
+      <GroupHeader group={group} me={me} isAdmin={isAdmin} onInvite={() => setInviteOpen(true)} />
       <GroupTabs />
 
       <div className="mt-5">
-        <Outlet context={{ group, me, isAdmin, openInvite: () => setInviteOpen(true) }} />
+        <ErrorBoundary inline resetKey={pathname}>
+          <Suspense fallback={<PageFallback />}>
+            <Outlet context={{ group, me, isAdmin, openInvite: () => setInviteOpen(true) }} />
+          </Suspense>
+        </ErrorBoundary>
       </div>
 
       {isAdmin && <InviteModal open={inviteOpen} onClose={() => setInviteOpen(false)} group={group} />}

@@ -88,24 +88,24 @@ export default function Landing() {
 
   const faqs = [
     {
-      q: "Kya mere doston ko koi app download karni padegi?",
-      a: "Bilkul nahi! Splitly 100% web-first aur mobile-optimized hai. WhatsApp par invite link bhejo, link par click karte hi browser mein group khul jata hai.",
+      q: "Do friends need to download an app to join?",
+      a: "Not at all. Splitly is 100% web-first and mobile-optimized. Send an invite link via WhatsApp or email, and friends join instantly right from their browser.",
     },
     {
-      q: "Smart Debt Simplification kaise kaam karta hai?",
-      a: "Agar A ko B ko ₹500 dene hain, aur B ko C ko ₹500 dene hain, to Splitly circular transfers ko khatam karke direct 'A pays C ₹500' kar deta hai. 10 zigzag transfers sirf 2-3 direct payments mein settle ho jate hain.",
+      q: "How does Smart Debt Simplification work?",
+      a: "If A owes B ₹500 and B owes C ₹500, Splitly eliminates circular transactions and creates a direct 'A pays C ₹500' route. Multiple complex debts collapse into minimal direct transfers.",
     },
     {
-      q: "Kya Splitly 100% free hai?",
-      a: "Haan, Splitly bilkul free aur open-source hai. Koi hidden charges, ads ya subscription nahi hai.",
+      q: "Is Splitly completely free to use?",
+      a: "Yes, Splitly is 100% free and open-source. No hidden charges, subscriptions, or ads.",
     },
     {
-      q: "Odd amounts par 1-2 paise ka roundoff issue aata hai kya?",
-      a: "Kabhi nahi. Splitly backend mein saare calculations integer paise mein karta hai aur Largest Remainder algorithm use karta hai, jisse total hamesha 100% exact rehta hai.",
+      q: "How does Splitly eliminate 1-2 paise rounding errors?",
+      a: "Splitly handles all financial calculations in integer paise and implements the Largest Remainder algorithm, ensuring split allocations always total 100% exactly.",
     },
     {
-      q: "Kya hum expenses ka bill ya receipt attach kar sakte hain?",
-      a: "Haan, restaurant receipts, hotel bills ya tickets ki photo expense banate waqt direct upload kar sakte ho taaki baad mein koi confusion na rahe.",
+      q: "Can we attach bill receipts and photos?",
+      a: "Yes. You can upload receipts, bills, and tickets with automated in-browser image compression when recording an expense.",
     },
   ];
 
@@ -207,9 +207,8 @@ export default function Landing() {
             </h1>
 
             <p className="mt-5 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              Goa trip ho, flat ka rent ya weekend dinner — sabhi kharche secondon mein baanto.
-              Splitly circular payments ko automatically collapse karke sabse kam transfers mein
-              settle kar deta hai.
+              Whether splitting flat rent, road trips, or weekend dinners, Splitly collapses circular
+              debts into the minimum number of payments so everyone settles up effortlessly.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -284,7 +283,7 @@ export default function Landing() {
                   Multiple circular payments & disputes
                 </h3>
                 <p className="mt-1 text-xs text-slate-500">
-                  Sabne alag-alag kharche kiye, aur sab ek doosre ko paise bhejte reh gaye.
+                  Multiple members paying separately, creating tangled circular debt loops.
                 </p>
 
                 <div className="mt-5 space-y-2 font-mono text-xs text-slate-600">
@@ -324,7 +323,7 @@ export default function Landing() {
                   Optimal settlement in minimal steps
                 </h3>
                 <p className="mt-1 text-xs text-slate-500">
-                  Splitly net balances ko calculate karke direct payment routes bana deta hai.
+                  Splitly calculates net balances to generate optimal, minimal settlement routes.
                 </p>
 
                 <div className="mt-5 space-y-2.5">
@@ -381,8 +380,7 @@ export default function Landing() {
               Live Split Calculator
             </h2>
             <p className="mt-2 text-sm text-slate-600">
-              Check karo kaise Splitly kisi bhi amount ko 1 paise ke roundoff error ke bina baant
-              deta hai.
+              See how Splitly splits any amount across friends with zero rounding discrepancy.
             </p>
           </div>
 
@@ -515,10 +513,10 @@ export default function Landing() {
               Why Splitly?
             </span>
             <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-              Har tarah ke group ke liye ready
+              Engineered for Every Group & Trip
             </h2>
             <p className="mt-2 text-sm sm:text-base text-slate-600">
-              Chahe flatmates ka monthly ration ho, doston ka dinner bill ya Himalayan road trip.
+              From flatmates splitting monthly rent to weekend getaways and team dinners.
             </p>
           </div>
 
@@ -532,8 +530,7 @@ export default function Landing() {
                 Smart Debt Simplifier
               </h3>
               <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                Circular debts ko condense karke minimum payments banata hai. Log aapas mein 8
-                baar nahi, sirf 2 baar transfer karte hain.
+                Collapses circular debts into the minimum number of payments using greedy graph algorithms.
               </p>
             </div>
 
@@ -545,8 +542,7 @@ export default function Landing() {
                 4 Flexible Split Modes
               </h3>
               <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                Equal (barabar), Exact (bill item wise), Percentage (income-based), aur Shares (room
-                size ke mutabiq) splits support karta hai.
+                Supports equal splits, exact itemized amounts, percentage shares, and custom weight allocations.
               </p>
             </div>
 
@@ -558,8 +554,7 @@ export default function Landing() {
                 1-Click WhatsApp Invite
               </h3>
               <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                Kisi ko app download karne ki zaroorat nahi. Secure invite link share karo aur
-                friends sidha browser se join kar lenge.
+                No app install required. Share a secure invite link to let friends join instantly in their browser.
               </p>
             </div>
 
@@ -571,8 +566,7 @@ export default function Landing() {
                 Analytics & Top Spender
               </h3>
               <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                Category wise pie-charts: Food, Travel, Rent aur Stay par kitna kharch hua, aur sabse
-                zyada kisne pay kiya.
+                Category breakdowns for food, travel, rent, and lodging, plus top-spender metrics.
               </p>
             </div>
 
@@ -584,8 +578,7 @@ export default function Landing() {
                 Receipts & Bill Upload
               </h3>
               <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                Expense banate waqt restaurant ya hotel bill ki image attach karo taaki har member
-                bill transparently verify kar sake.
+                Attach receipt photos with automated in-browser compression for full group transparency.
               </p>
             </div>
 
@@ -597,8 +590,7 @@ export default function Landing() {
                 Export to CSV & PDF
               </h3>
               <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                Trip ya month khatam hone par saara expense breakdown ek click mein clean CSV ya
-                PDF report format mein download karo.
+                Download complete expense histories and balance summaries in clean CSV and PDF formats.
               </p>
             </div>
           </div>
@@ -623,8 +615,7 @@ export default function Landing() {
               </span>
               <h3 className="mt-5 text-base font-bold text-slate-900">Create a Group</h3>
               <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                Group ka naam rakho (jaise "Manali Trek" ya "Flat 302") aur invite code doston ko
-                WhatsApp par share karo.
+                Name your group (e.g. "Manali Trek" or "Flat 302") and share the invite code with friends.
               </p>
             </div>
 
@@ -634,8 +625,7 @@ export default function Landing() {
               </span>
               <h3 className="mt-5 text-base font-bold text-slate-900">Add Bills on the Go</h3>
               <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                Jab bhi kharcha ho, amount daalo, payer select karo aur choose karo ki kiske hisse
-                kitna kharcha aayega.
+                Add amounts on the go, choose who paid, and split equally or itemized.
               </p>
             </div>
 
@@ -645,8 +635,7 @@ export default function Landing() {
               </span>
               <h3 className="mt-5 text-base font-bold text-slate-900">One-Tap Settlement</h3>
               <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                Trip ke end par Splitly bata deta hai kisko kisko kitna UPI transfer karna hai. Ek
-                click mein debts clear!
+                Splitly calculates exactly who pays whom via UPI deep links. Clear debts in a single click.
               </p>
             </div>
           </div>

@@ -5,11 +5,12 @@ const base =
   "active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50";
 
 const variants = {
-  primary: "bg-brand-gradient text-white shadow-glow hover:brightness-110",
-  secondary: "border border-line bg-white/5 text-ink hover:bg-white/10",
-  ghost: "text-muted hover:bg-white/5 hover:text-ink",
+  primary: "bg-brand-gradient text-white shadow-sm hover:opacity-95",
+  secondary: "border border-line bg-white/[0.05] text-ink hover:bg-white/[0.09] hover:border-white/15",
+  ghost: "text-muted hover:bg-white/[0.05] hover:text-ink",
   danger: "border border-bad/30 bg-bad/15 text-bad hover:bg-bad/25",
 };
+
 
 const sizes = {
   sm: "h-9 px-3 text-sm",

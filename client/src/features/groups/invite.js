@@ -25,3 +25,16 @@ export const MAX_USES_PRESETS = [1, 5, 10, 25, 50];
 
 export const inviteMessage = (groupName) =>
   `Join "${groupName}" on ${APP_NAME} to split expenses together.`;
+
+export const parseInviteCode = (input) => {
+  const value = input.trim();
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    const match = url.pathname.match(/\/join\/([^/]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+  } catch {
+    return /^[A-Za-z0-9_-]{10,64}$/.test(value) ? value : null;
+  }
+};
+

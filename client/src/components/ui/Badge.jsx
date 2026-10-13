@@ -2,7 +2,8 @@ import { cn } from "@/lib/cn";
 
 const tones = {
   neutral: "border-line bg-white/5 text-muted",
-  brand: "border-brand/30 bg-brand/15 text-violet-300",
+  brand: "border-brand/30 bg-brand/15 text-blue-300",
+
   good: "border-good/30 bg-good/15 text-good",
   bad: "border-bad/30 bg-bad/15 text-bad",
   warn: "border-warn/30 bg-warn/15 text-warn",

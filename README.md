@@ -1,63 +1,65 @@
-# Splitly
+# Splitly — Group Expense Sharing & Debt Simplification Platform
 
-A modern full-stack web application to split group expenses and settle debts with the fewest transactions.
+A production-grade, full-stack expense sharing application built with the MERN stack. Create groups, split expenses across multiple payers and split types, track net balances, and minimize settlement transactions using graph-based debt simplification.
+
+## Key Engineering Highlights
+
+- **Financial Precision in Discrete Integer Paise**: All expense amounts, splits, and balances are stored as discrete integer paise, eliminating IEEE-754 floating-point inaccuracies. Split rounding implements the Largest Remainder Method to guarantee that sum of splits equals total amount with 0 paise variance.
+- **Graph Debt Simplification Algorithm**: Collapses multi-party circular debts into the minimum possible settlement transactions.
+- **ACID Transactions**: MongoDB multi-document transactions ensure atomicity during expense creation, deletion, and settlement processing.
+- **Automated Unit Testing**: 130 comprehensive unit tests using Vitest covering money precision, response normalizers, date ranges, and split allocations.
+- **Modern Responsive UX**: Glassmorphism dark mode with Tailwind CSS v4, PWA offline support with precaching, and TanStack React Query for async state management and cache invalidation.
+
+## Core Features
+
+- **Groups & Invites**: Group creation with categories, secure invite links with expiration/usage limits, QR codes, and placeholder members.
+- **Multi-Method Expense Splitting**: Supports Equal, Exact, Percentage, and Shares-based allocations with multiple payers.
+- **Receipts & Attachments**: Photo upload with in-browser compression.
+- **Settlement & Settle Up**: Minimum-transactions debt simplification plan, UPI deep link integration, and transaction undo functionality.
+- **Analytics & Visualizations**: Category breakdowns, monthly spending trends, and top spender tracking powered by Recharts.
+- **Export Reports**: One-click statement generation in CSV and PDF formats.
+- **Recurring Expenses**: Automated weekly/monthly recurring rules with pause, resume, and skip controls.
+- **Authentication & Security**: JWT with access and refresh token rotation, Web Locks tab synchronization, and secure password reset workflows.
 
 ## Tech Stack
 
-- **Frontend:** React 18, Vite, Tailwind CSS, TanStack React Query
-- **Backend:** Node.js, Express, MongoDB (Mongoose), JWT, Zod
-
-## Features
-
-- **Group Expenses:** Create groups, add members, and split expenses equally, by exact amounts, percentages, or shares.
-- **Smart Debt Simplification:** Graph-based minimization algorithm reduces overall payment transactions.
-- **Invite Links & QR:** Shareable group invite links with instant member previews.
-- **Analytics & Exports:** Visual spending breakdowns and PDF/CSV export support.
+- **Frontend**: React 18, Vite, Tailwind CSS v4, TanStack Query, React Hook Form, Zod, Recharts, Lucide Icons, Vitest, Vite PWA
+- **Backend**: Node.js, Express.js, MongoDB, Mongoose, JWT, Swagger OpenAPI
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js (v20+)
-- MongoDB database (local or MongoDB Atlas)
-
 ### 1. Backend Setup
-
 ```bash
 cd server
 npm install
 npm run dev
 ```
 
-Server runs on `http://localhost:5000` (API documentation: `http://localhost:5000/api/docs`).
-
 ### 2. Frontend Setup
-
 ```bash
 cd client
 npm install
 npm run dev
 ```
 
-Client runs on `http://localhost:5173`.
+### Environment Configuration
 
-## Environment Variables
+| Variable | Description |
+|---|---|
+| `VITE_API_URL` | Backend API base URL (e.g. `http://localhost:5000/api`) |
+| `VITE_APP_URL` | Public application URL |
+| `VITE_DEMO_EMAIL` | Optional live demo email credentials |
+| `VITE_DEMO_PASSWORD` | Optional live demo password credentials |
 
-**Backend (`server/.env`):**
-```env
-PORT=5000
-NODE_ENV=development
-MONGO_URI=your_mongodb_connection_string
-JWT_ACCESS_SECRET=your_jwt_access_secret
-JWT_REFRESH_SECRET=your_jwt_refresh_secret
-CLIENT_URL=http://localhost:5173
-```
+## Scripts & Testing
 
-**Frontend (`client/.env`):**
-```env
-VITE_API_URL=http://localhost:5000/api
-```
+- `npm run dev`: Launch local development server
+- `npm run build`: Production build with PWA service worker precaching
+- `npm test`: Run 130 Vitest unit test suites
+- `npm run preview`: Preview production build locally
 
-## License
+## Deployment
 
-MIT
+- **Frontend**: Vercel (SPA routing configured in `vercel.json`)
+- **Backend**: Render
+- **Database**: MongoDB Atlas

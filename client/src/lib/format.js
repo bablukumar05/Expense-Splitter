@@ -57,3 +57,79 @@ export const timeUntil = (value) => {
   if (hours < 24) return rtf.format(hours, "hour");
   return rtf.format(Math.round(hours / 24), "day");
 };
+
+export const formatDay = (value, options = {}) =>
+  formatDate(value, { timeZone: "UTC", ...options });
+
+export const formatMonth = (value) =>
+  new Intl.DateTimeFormat("en-IN", { month: "long", year: "numeric", timeZone: "UTC" }).format(
+    new Date(value)
+  );
+
+export const todayInputValue = () => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+export const dateInputValue = (value) => new Date(value).toISOString().slice(0, 10);
+
+export const currencySymbol = (code = "INR") => {
+  try {
+    return (
+      new Intl.NumberFormat("en", {
+        style: "currency",
+        currency: code,
+        currencyDisplay: "narrowSymbol",
+      })
+        .formatToParts(0)
+        .find((part) => part.type === "currency")?.value ?? code
+    );
+  } catch {
+    return code;
+  }
+};
+
+export const formatTime = (value) =>
+  new Intl.DateTimeFormat("en-IN", { hour: "numeric", minute: "2-digit" }).format(new Date(value));
+
+const isSameLocalDay = (a, b) =>
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+export const dayHeading = (value) => {
+  const date = new Date(value);
+  const now = new Date();
+  if (isSameLocalDay(date, now)) return "Today";
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (isSameLocalDay(date, yesterday)) return "Yesterday";
+
+  return formatDate(value);
+};
+
+export const localDayKey = (value) => {
+  const d = new Date(value);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+};
+
+export const compactMoney = (amount, currency = "INR") => {
+  try {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency,
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(amount);
+  } catch {
+    return String(Math.round(amount));
+  }
+};
+
+export const monthLabel = (key, options = { month: "short", year: "2-digit" }) => {
+  const [year, month] = String(key).split("-").map(Number);
+  if (!year || !month) return String(key);
+  return new Intl.DateTimeFormat("en-IN", { ...options, timeZone: "UTC" }).format(
+    new Date(Date.UTC(year, month - 1, 1))
+  );
+};

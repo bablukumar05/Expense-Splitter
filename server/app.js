@@ -46,7 +46,8 @@ app.use(cors({
     if (!origin || env.CORS_ORIGINS.includes(origin)) return callback(null, true);
     return callback(new Error('Origin is not allowed by CORS'));
   },
-  credentials: true
+  credentials: true,
+  exposedHeaders: ['Content-Disposition']
 }));
 app.use(express.json({ limit: '16kb' }));
 app.use(mongoSanitize());

@@ -37,7 +37,7 @@ export default function Dashboard() {
   );
 
   const showSearch = searchInput !== "" || total > 5;
-  const firstName = user?.name ? user.name.split(" ")[0] : "there";
+  const firstName = user?.name ? user.name.split(" ")[0].toUpperCase() : "THERE";
 
   const refresh = async () => {
     setManualRefresh(true);
@@ -90,7 +90,7 @@ export default function Dashboard() {
 
     return (
       <>
-        <div className={cn("grid gap-3 transition-opacity md:grid-cols-2", groups.isPlaceholderData && "opacity-60")}>
+        <div className={cn("grid gap-3.5 transition-opacity md:grid-cols-2", groups.isPlaceholderData && "opacity-60")}>
           {items.map((group) => (
             <GroupCard
               key={group._id}
@@ -116,77 +116,85 @@ export default function Dashboard() {
   };
 
   return (
-    <>
+    <div className="space-y-8">
       <PageHeader
-        title={`Hi, ${firstName} 👋`}
-        subtitle="Here's where you stand"
-        actions={
-          <>
-            <Button
-              variant="secondary"
-              size="icon"
-              onClick={refresh}
-              disabled={manualRefresh}
-              aria-label="Refresh"
-              aria-busy={manualRefresh}
-            >
-              <RefreshCw className={cn("size-5", manualRefresh && "animate-spin")} />
-            </Button>
-            <Button onClick={() => setCreateOpen(true)}>
-              <Plus className="size-4" />
-              New<span className="hidden sm:inline"> group</span>
-            </Button>
-          </>
-        }
-      />
+          title={`Hi, ${firstName} 👋`}
+          subtitle="Here's where you stand"
+          actions={
+            <>
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={refresh}
+                disabled={manualRefresh}
+                aria-label="Refresh"
+                aria-busy={manualRefresh}
+                className="size-10 rounded-xl border border-white/10 bg-white/[0.05] text-slate-200 backdrop-blur-md hover:bg-white/10"
+              >
+                <RefreshCw className={cn("size-5", manualRefresh && "animate-spin")} />
+              </Button>
+              <Button
+                onClick={() => setCreateOpen(true)}
+                className="gap-2 rounded-xl bg-blue-600 px-4 py-2 font-medium text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] transition hover:bg-blue-500"
+              >
+                <Plus className="size-4" />
+                New group
+              </Button>
+            </>
+          }
+        />
 
-      <BalanceSummary
-        summary={balances.data?.summary}
-        loading={balances.isPending}
-        error={balances.isError && !balances.data}
-        onRetry={() => balances.refetch()}
-      />
+        <BalanceSummary
+          summary={balances.data?.summary}
+          loading={balances.isPending}
+          error={balances.isError && !balances.data}
+          onRetry={() => balances.refetch()}
+        />
 
-      <section className="mt-8" aria-labelledby="groups-heading">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 id="groups-heading" className="text-lg font-semibold">
-            Your groups
-          </h2>
-          {total > 0 && (
-            <span className="text-sm text-muted">
-              {total} {total === 1 ? "group" : "groups"}
-            </span>
+        <section aria-labelledby="groups-heading">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 id="groups-heading" className="text-lg font-bold text-white">
+              Your groups
+            </h2>
+            {total > 0 && (
+              <span className="text-sm font-medium text-slate-400">
+                {total} {total === 1 ? "group" : "groups"}
+              </span>
+            )}
+          </div>
+
+          {showSearch && (
+            <div className="mb-4">
+              <Input
+                type="search"
+                enterKeyHint="search"
+                placeholder="Search groups"
+                aria-label="Search groups"
+                icon={Search}
+                autoComplete="off"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+            </div>
           )}
-        </div>
 
-        {showSearch && (
-          <div className="mb-4">
-            <Input
-              type="search"
-              enterKeyHint="search"
-              placeholder="Search groups"
-              aria-label="Search groups"
-              icon={Search}
-              autoComplete="off"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-            />
-          </div>
-        )}
+          {renderGroups()}
 
-        {renderGroups()}
+          {!groups.isPending && items.length > 0 && (
+            <div className="mt-8 text-center">
+              <Button
+                variant="ghost"
+                onClick={() => setJoinOpen(true)}
+                className="text-sm font-medium text-slate-400 hover:text-white"
+              >
+                Have an invite link? Join a group
+              </Button>
+            </div>
+          )}
+        </section>
 
-        {!groups.isPending && items.length > 0 && (
-          <div className="mt-6 text-center">
-            <Button variant="ghost" onClick={() => setJoinOpen(true)}>
-              Have an invite link? Join a group
-            </Button>
-          </div>
-        )}
-      </section>
-
-      <CreateGroupModal open={createOpen} onClose={() => setCreateOpen(false)} />
-      <JoinGroupModal open={joinOpen} onClose={() => setJoinOpen(false)} />
-    </>
-  );
-}
+        <CreateGroupModal open={createOpen} onClose={() => setCreateOpen(false)} />
+        <JoinGroupModal open={joinOpen} onClose={() => setJoinOpen(false)} />
+      </div>
+    );
+  }

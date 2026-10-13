@@ -6,7 +6,7 @@ export const updateProfileRequest = {
   ...emptyRequest,
   body: z.object({
     name: z.string().trim().min(1).max(80).optional(),
-    avatar: z.string().url().max(2048).nullable().optional(),
+    avatar: z.union([z.string().url().max(2048), z.literal(''), z.null()]).optional(),
     defaultCurrency: z.string().trim().toUpperCase().pipe(z.enum(SUPPORTED_CURRENCIES)).optional(),
     emailNotifications: z.boolean().optional()
   }).strict().refine((body) => Object.keys(body).length > 0, 'At least one profile field is required')

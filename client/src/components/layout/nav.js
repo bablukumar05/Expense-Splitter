@@ -1,11 +1,17 @@
-import { Home, UserRound } from "lucide-react";
+import { Home, TrendingUp, UserRound } from "lucide-react";
 
 export const NAV_ITEMS = [
   {
-    to: "/",
+    to: "/dashboard",
     label: "Home",
     icon: Home,
-    isActive: (pathname) => pathname === "/" || pathname.startsWith("/groups"),
+    isActive: (pathname) => pathname === "/dashboard" || pathname === "/" || pathname.startsWith("/groups"),
+  },
+  {
+    to: "/insights",
+    label: "Insights",
+    icon: TrendingUp,
+    isActive: (pathname) => pathname.startsWith("/insights"),
   },
   {
     to: "/account",

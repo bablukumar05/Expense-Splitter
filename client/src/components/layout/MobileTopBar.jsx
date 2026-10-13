@@ -10,7 +10,7 @@ export default function MobileTopBar() {
   return (
     <header className="safe-top sticky top-0 z-30 border-b border-line bg-canvas/80 backdrop-blur-xl md:hidden">
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2.5">
+        <Link to="/dashboard" className="flex items-center gap-2.5">
           <span className="inline-flex size-8 items-center justify-center rounded-lg bg-brand-gradient">
             <Wallet className="size-4 text-white" />
           </span>

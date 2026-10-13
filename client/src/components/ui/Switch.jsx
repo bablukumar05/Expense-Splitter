@@ -28,7 +28,8 @@ export default function Switch({ checked, onChange, label, description, disabled
         onClick={() => onChange(!checked)}
         className="inline-flex h-11 shrink-0 items-center px-1 disabled:opacity-50"
       >
-        <span className={cn("relative h-7 w-12 rounded-full transition-colors", checked ? "bg-brand-gradient" : "bg-white/15")}>
+        <span className={cn("relative h-7 w-12 rounded-full transition-colors", checked ? "bg-brand" : "bg-white/15")}>
+
           <span
             className={cn(
               "absolute left-0.5 top-0.5 size-6 rounded-full bg-white shadow transition-transform",

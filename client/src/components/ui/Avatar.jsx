@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { initials } from "@/lib/format";
 
@@ -20,15 +21,20 @@ const pick = (name = "") =>
   gradients[[...name].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % gradients.length];
 
 export default function Avatar({ name, src, size = "md", className }) {
-  if (src) {
+  const [failedSrc, setFailedSrc] = useState(null);
+
+  if (src && src !== failedSrc) {
     return (
       <img
         src={src}
-        alt={name || "avatar"}
+        alt=""
+        referrerPolicy="no-referrer"
+        onError={() => setFailedSrc(src)}
         className={cn("shrink-0 rounded-full object-cover", sizes[size], className)}
       />
     );
   }
+
   return (
     <span
       aria-hidden="true"

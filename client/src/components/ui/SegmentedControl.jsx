@@ -25,8 +25,9 @@ export default function SegmentedControl({ options, value, onChange, label, name
             className={
               "flex h-11 cursor-pointer items-center justify-center whitespace-nowrap rounded-lg px-3 text-sm font-medium " +
               "text-muted transition hover:text-ink peer-checked:bg-brand-gradient peer-checked:text-white " +
-              "peer-checked:shadow-glow peer-focus-visible:ring-2 peer-focus-visible:ring-brand-2 sm:h-9"
+              "peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-brand-2 sm:h-9"
             }
+
           >
             {option.label}
           </span>
