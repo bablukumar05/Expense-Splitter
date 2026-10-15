@@ -33,7 +33,7 @@ const DesignPreview = import.meta.env.DEV ? lazy(() => import("@/pages/DesignPre
 
 function RootRoute() {
   const { status } = useAuth();
-  if (status === "loading") return <FullPageLoader label="Loading Splitly…" />;
+  if (status === "loading") return <FullPageLoader label="Loading SplitMate…" />;
   if (status === "authenticated") return <Navigate to="/dashboard" replace />;
   return <Landing />;
 }

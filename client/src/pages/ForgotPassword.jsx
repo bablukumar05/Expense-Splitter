@@ -71,7 +71,7 @@ export default function ForgotPassword() {
     <AuthLayout
       title="Forgot your password?"
       subtitle="Enter your email and we'll send you a reset link"
-      badge="SPLITLY • RECOVERY"
+      badge="SPLITMATE • RECOVERY"
       footer={footer}
     >
       <form onSubmit={handleSubmit(send)} noValidate className="space-y-4">

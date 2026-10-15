@@ -54,7 +54,7 @@ export default function ResetPassword() {
     <AuthLayout
       title="Set a new password"
       subtitle="Choose a strong password you haven't used before"
-      badge="SPLITLY • SECURITY"
+      badge="SPLITMATE • SECURITY"
       footer={
         <Link to="/login" className={linkClass}>
           Back to log in

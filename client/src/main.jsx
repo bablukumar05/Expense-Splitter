@@ -12,9 +12,9 @@ import { queryClient } from "@/lib/queryClient";
 
 window.addEventListener("vite:preloadError", () => {
   try {
-    const last = Number(sessionStorage.getItem("splitly.chunkReload") || 0);
+    const last = Number(sessionStorage.getItem("splitmate.chunkReload") || 0);
     if (Date.now() - last > 10_000) {
-      sessionStorage.setItem("splitly.chunkReload", String(Date.now()));
+      sessionStorage.setItem("splitmate.chunkReload", String(Date.now()));
       window.location.reload();
     }
   } catch {

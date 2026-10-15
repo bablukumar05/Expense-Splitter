@@ -6,7 +6,7 @@ export async function sendPasswordResetEmail(email, token) {
 
   await sendEmail({
     to: email,
-    subject: 'Reset your Expense Splitter password',
+    subject: 'Reset your SplitMate password',
     text: `Use this link to reset your password. It expires in one hour: ${resetUrl.toString()}`
   });
 }

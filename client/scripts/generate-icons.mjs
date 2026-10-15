@@ -42,7 +42,7 @@ const og = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" vi
 <g transform="translate(96 120) scale(0.5)">
   <rect width="512" height="512" rx="112" fill="url(#g)"/>${GLYPH}
 </g>
-<text x="96" y="450" font-family="Inter, Arial, Helvetica, sans-serif" font-size="104" font-weight="700" fill="#e8ebf8">Splitly</text>
+<text x="96" y="450" font-family="Inter, Arial, Helvetica, sans-serif" font-size="104" font-weight="700" fill="#e8ebf8">SplitMate</text>
 <text x="96" y="520" font-family="Inter, Arial, Helvetica, sans-serif" font-size="40" fill="#8f98ba">Split expenses. Settle up smart.</text>
 </svg>`;
 

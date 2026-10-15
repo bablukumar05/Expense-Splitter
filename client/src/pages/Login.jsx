@@ -55,7 +55,7 @@ export default function Login() {
     <AuthLayout
       title="Welcome back"
       subtitle="Log in to manage your group trips"
-      badge="SPLITLY • TRAVEL & EXPENSES"
+      badge="SPLITMATE • TRAVEL & EXPENSES"
       footer={
         <p className="text-sm text-slate-400">
           Don&apos;t have an account?{" "}

@@ -42,7 +42,7 @@ export default function Footer() {
       return;
     }
     setSubscribed(true);
-    toast.success("Thank you for subscribing to Splitly release updates!");
+    toast.success("Thank you for subscribing to SplitMate release updates!");
     setEmail("");
   };
 

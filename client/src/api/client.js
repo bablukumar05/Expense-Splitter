@@ -65,7 +65,7 @@ bare.interceptors.response.use(onResponse, (error) => {
 
 const withLock = (task) =>
   typeof navigator !== "undefined" && navigator.locks
-    ? navigator.locks.request("splitly-token-refresh", task)
+    ? navigator.locks.request("splitmate-token-refresh", task)
     : task();
 
 async function doRefresh() {

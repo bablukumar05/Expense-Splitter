@@ -52,7 +52,7 @@ export default function Sidebar() {
             className="w-full justify-center gap-2 border-brand/40 bg-brand/10 text-brand hover:bg-brand/20"
             onClick={install}
           >
-            <Download className="size-4" /> Install Splitly App
+            <Download className="size-4" /> Install {APP_NAME} App
           </Button>
         )}
 

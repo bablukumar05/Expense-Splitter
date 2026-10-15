@@ -25,8 +25,8 @@ describe("getInviteStatus", () => {
 
 describe("parseInviteCode", () => {
   it("extracts code from full invitation link", () => {
-    expect(parseInviteCode("https://splitly.app/join/abcDEF_123-xyz")).toBe("abcDEF_123-xyz");
-    expect(parseInviteCode(" https://splitly.app/join/abc123XYZ789?ref=wa ")).toBe("abc123XYZ789");
+    expect(parseInviteCode("https://splitmate.app/join/abcDEF_123-xyz")).toBe("abcDEF_123-xyz");
+    expect(parseInviteCode(" https://splitmate.app/join/abc123XYZ789?ref=wa ")).toBe("abc123XYZ789");
   });
 
   it("accepts direct raw invite code", () => {
@@ -45,6 +45,6 @@ describe("parseInviteCode", () => {
 
 describe("inviteMessage", () => {
   it("group ka naam aur app ka naam", () => {
-    expect(inviteMessage("Goa Trip")).toBe('Join "Goa Trip" on Splitly to split expenses together.');
+    expect(inviteMessage("Goa Trip")).toBe('Join "Goa Trip" on SplitMate to split expenses together.');
   });
 });

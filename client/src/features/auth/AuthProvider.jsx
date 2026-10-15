@@ -9,7 +9,7 @@ import {
 } from "@/api/client";
 import { ApiError, SessionExpiredError } from "@/api/errors";
 import { queryClient } from "@/lib/queryClient";
-import { getRefreshToken, setRefreshToken } from "@/lib/storage";
+import { getRefreshToken, setRefreshToken, REFRESH_TOKEN_KEY, LEGACY_REFRESH_TOKEN_KEY } from "@/lib/storage";
 import { AuthContext } from "./auth-context";
 
 export default function AuthProvider({ children }) {
@@ -59,7 +59,7 @@ export default function AuthProvider({ children }) {
 
   useEffect(() => {
     const onStorage = (event) => {
-      if (event.key !== null && event.key !== "splitly.refreshToken") return;
+      if (event.key !== null && event.key !== REFRESH_TOKEN_KEY && event.key !== LEGACY_REFRESH_TOKEN_KEY) return;
       if (getRefreshToken()) return;
       setAccessToken(null);
       queryClient.clear();

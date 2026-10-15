@@ -61,7 +61,7 @@ export default function AuthLayout({
   subtitle,
   children,
   footer,
-  badge = "SPLITLY • TRAVEL & EXPENSES",
+  badge = "SPLITMATE • TRAVEL & EXPENSES",
   showBackButton = true,
   backTo = "/",
   backLabel = "Back to Home",
@@ -112,7 +112,7 @@ export default function AuthLayout({
           </div>
 
           <footer className="mt-8 text-center text-xs text-slate-500 flex items-center justify-center gap-3">
-            <span>© 2026 Splitly</span>
+            <span>© 2026 SplitMate</span>
             <span>·</span>
             <span className="hover:text-slate-400 cursor-pointer transition">Legal</span>
             <span>·</span>

@@ -89,19 +89,19 @@ export default function Landing() {
   const faqs = [
     {
       q: "Do friends need to download an app to join?",
-      a: "Not at all. Splitly is 100% web-first and mobile-optimized. Send an invite link via WhatsApp or email, and friends join instantly right from their browser.",
+      a: "Not at all. SplitMate is 100% web-first and mobile-optimized. Send an invite link via WhatsApp or email, and friends join instantly right from their browser.",
     },
     {
       q: "How does Smart Debt Simplification work?",
-      a: "If A owes B ₹500 and B owes C ₹500, Splitly eliminates circular transactions and creates a direct 'A pays C ₹500' route. Multiple complex debts collapse into minimal direct transfers.",
+      a: "If A owes B ₹500 and B owes C ₹500, SplitMate eliminates circular transactions and creates a direct 'A pays C ₹500' route. Multiple complex debts collapse into minimal direct transfers.",
     },
     {
-      q: "Is Splitly completely free to use?",
-      a: "Yes, Splitly is 100% free and open-source. No hidden charges, subscriptions, or ads.",
+      q: "Is SplitMate completely free to use?",
+      a: "Yes, SplitMate is 100% free and open-source. No hidden charges, subscriptions, or ads.",
     },
     {
-      q: "How does Splitly eliminate 1-2 paise rounding errors?",
-      a: "Splitly handles all financial calculations in integer paise and implements the Largest Remainder algorithm, ensuring split allocations always total 100% exactly.",
+      q: "How does SplitMate eliminate 1-2 paise rounding errors?",
+      a: "SplitMate handles all financial calculations in integer paise and implements the Largest Remainder algorithm, ensuring split allocations always total 100% exactly.",
     },
     {
       q: "Can we attach bill receipts and photos?",
@@ -207,7 +207,7 @@ export default function Landing() {
             </h1>
 
             <p className="mt-5 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              Whether splitting flat rent, road trips, or weekend dinners, Splitly collapses circular
+              Whether splitting flat rent, road trips, or weekend dinners, SplitMate collapses circular
               debts into the minimum number of payments so everyone settles up effortlessly.
             </p>
 
@@ -313,7 +313,7 @@ export default function Landing() {
               <div className="bg-gradient-to-br from-indigo-50/40 via-white to-emerald-50/40 p-6 sm:p-8">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">
-                    With Splitly (Smart Simplification)
+                    With SplitMate (Smart Simplification)
                   </span>
                   <span className="rounded-md bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
                     Just 2 Transfers!
@@ -323,7 +323,7 @@ export default function Landing() {
                   Optimal settlement in minimal steps
                 </h3>
                 <p className="mt-1 text-xs text-slate-500">
-                  Splitly calculates net balances to generate optimal, minimal settlement routes.
+                  SplitMate calculates net balances to generate optimal, minimal settlement routes.
                 </p>
 
                 <div className="mt-5 space-y-2.5">
@@ -380,7 +380,7 @@ export default function Landing() {
               Live Split Calculator
             </h2>
             <p className="mt-2 text-sm text-slate-600">
-              See how Splitly splits any amount across friends with zero rounding discrepancy.
+              See how SplitMate splits any amount across friends with zero rounding discrepancy.
             </p>
           </div>
 
@@ -510,7 +510,7 @@ export default function Landing() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mx-auto max-w-2xl text-center">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">
-              Why Splitly?
+              Why SplitMate?
             </span>
             <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
               Engineered for Every Group & Trip
@@ -635,7 +635,7 @@ export default function Landing() {
               </span>
               <h3 className="mt-5 text-base font-bold text-slate-900">One-Tap Settlement</h3>
               <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                Splitly calculates exactly who pays whom via UPI deep links. Clear debts in a single click.
+                SplitMate calculates exactly who pays whom via UPI deep links. Clear debts in a single click.
               </p>
             </div>
           </div>

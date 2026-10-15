@@ -52,7 +52,7 @@ export default function Register() {
     <AuthLayout
       title="Create your account"
       subtitle="Start splitting expenses in under a minute"
-      badge="SPLITLY • GET STARTED"
+      badge="SPLITMATE • GET STARTED"
       footer={
         <>
           Already have an account?{" "}

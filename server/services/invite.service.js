@@ -88,8 +88,8 @@ export async function inviteByEmail(group, inviter, email) {
   notificationQueue.enqueue({
     to: email,
     subject: `${safeHeader(inviter.name)} invited you to "${safeHeader(currentGroup.name)}"`,
-    text: `${inviter.name} invited you to join ${currentGroup.name} on Expense Splitter. Join: ${link}`,
-    html: `<p>${escapedInviter} invited you to join <b>${escapedName}</b> on Expense Splitter.</p><p><a href="${escapedLink}">Join the group</a></p>`
+    text: `${inviter.name} invited you to join ${currentGroup.name} on SplitMate. Join: ${link}`,
+    html: `<p>${escapedInviter} invited you to join <b>${escapedName}</b> on SplitMate.</p><p><a href="${escapedLink}">Join the group</a></p>`
   });
 }
 

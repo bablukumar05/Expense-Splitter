@@ -1,7 +1,7 @@
 export const openApiDocument = {
   openapi: '3.0.3',
   info: {
-    title: 'Expense Splitter API',
+    title: 'SplitMate API',
     version: '1.0.0',
     description: 'MERN backend API for groups, expenses, settlements, balances, activity and recurring expenses.'
   },

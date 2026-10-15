@@ -27,7 +27,7 @@ export async function sendEmail({ to, subject, text, html }) {
   }
 
   if (isResendConfigured) {
-    const fromAddress = env.EMAIL_FROM || env.SMTP_FROM || 'Expense Splitter <onboarding@resend.dev>';
+    const fromAddress = env.EMAIL_FROM || env.SMTP_FROM || 'SplitMate <onboarding@resend.dev>';
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {

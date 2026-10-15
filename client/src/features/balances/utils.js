@@ -51,11 +51,12 @@ export function buildUpiLink({ upiId, name, amount, note }) {
   return `upi://pay?${params.join("&")}`;
 }
 
-const upiKey = (memberId) => `splitly.upi.${memberId}`;
+const upiKey = (memberId) => `splitmate.upi.${memberId}`;
+const legacyUpiKey = (memberId) => `splitly.upi.${memberId}`;
 
 export const getSavedUpi = (memberId) => {
   try {
-    return localStorage.getItem(upiKey(memberId)) ?? "";
+    return localStorage.getItem(upiKey(memberId)) ?? localStorage.getItem(legacyUpiKey(memberId)) ?? "";
   } catch {
     return "";
   }

@@ -13,8 +13,8 @@ export default defineConfig({
       includeAssets: ["favicon.svg", "icons/apple-touch-icon.png", "robots.txt"],
       manifest: {
         id: "/",
-        name: "Splitly - Split expenses",
-        short_name: "Splitly",
+        name: "SplitMate - Split expenses",
+        short_name: "SplitMate",
         description: "Split expenses with friends, track balances and settle up with the fewest payments.",
         start_url: "/",
         scope: "/",

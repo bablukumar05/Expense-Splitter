@@ -1,4 +1,4 @@
-# Splitly — Group Expense Sharing & Debt Simplification Platform
+# SplitMate — Group Expense Sharing & Debt Simplification Platform
 
 A production-grade, full-stack expense sharing application built with the MERN stack. Create groups, split expenses across multiple payers and split types, track net balances, and minimize settlement transactions using graph-based debt simplification.
 

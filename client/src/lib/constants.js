@@ -1,4 +1,4 @@
-export const APP_NAME = "Splitly";
+export const APP_NAME = "SplitMate";
 
 export const GROUP_TYPES = [
   { value: "trip", label: "Trip", emoji: "✈️" },

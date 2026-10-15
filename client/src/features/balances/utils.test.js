@@ -91,8 +91,8 @@ describe("UPI", () => {
 
   it("deep link", () => {
     expect(
-      buildUpiLink({ upiId: "rahul@oksbi", name: "Rahul Sharma", amount: 400, note: "Splitly - Goa" })
-    ).toBe("upi://pay?pa=rahul@oksbi&pn=Rahul%20Sharma&am=400.00&cu=INR&tn=Splitly%20-%20Goa");
+      buildUpiLink({ upiId: "rahul@oksbi", name: "Rahul Sharma", amount: 400, note: "SplitMate - Goa" })
+    ).toBe("upi://pay?pa=rahul@oksbi&pn=Rahul%20Sharma&am=400.00&cu=INR&tn=SplitMate%20-%20Goa");
   });
 
   it("note ke bina tn nahi", () => {
