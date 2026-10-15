@@ -7,7 +7,6 @@ A production-grade, full-stack expense sharing application built with the MERN s
 - **Financial Precision in Discrete Integer Paise**: All expense amounts, splits, and balances are stored as discrete integer paise, eliminating IEEE-754 floating-point inaccuracies. Split rounding implements the Largest Remainder Method to guarantee that sum of splits equals total amount with 0 paise variance.
 - **Graph Debt Simplification Algorithm**: Collapses multi-party circular debts into the minimum possible settlement transactions.
 - **ACID Transactions**: MongoDB multi-document transactions ensure atomicity during expense creation, deletion, and settlement processing.
-- **Automated Unit Testing**: 130 comprehensive unit tests using Vitest covering money precision, response normalizers, date ranges, and split allocations.
 - **Modern Responsive UX**: Glassmorphism dark mode with Tailwind CSS v4, PWA offline support with precaching, and TanStack React Query for async state management and cache invalidation.
 
 ## Core Features
@@ -23,7 +22,7 @@ A production-grade, full-stack expense sharing application built with the MERN s
 
 ## Tech Stack
 
-- **Frontend**: React 18, Vite, Tailwind CSS v4, TanStack Query, React Hook Form, Zod, Recharts, Lucide Icons, Vitest, Vite PWA
+- **Frontend**: React 18, Vite, Tailwind CSS v4, TanStack Query, React Hook Form, Zod, Recharts, Lucide Icons, Vite PWA
 - **Backend**: Node.js, Express.js, MongoDB, Mongoose, JWT, Swagger OpenAPI
 
 ## Getting Started
@@ -51,11 +50,10 @@ npm run dev
 | `VITE_DEMO_EMAIL` | Optional live demo email credentials |
 | `VITE_DEMO_PASSWORD` | Optional live demo password credentials |
 
-## Scripts & Testing
+## Available Scripts
 
 - `npm run dev`: Launch local development server
 - `npm run build`: Production build with PWA service worker precaching
-- `npm test`: Run 130 Vitest unit test suites
 - `npm run preview`: Preview production build locally
 
 ## Deployment

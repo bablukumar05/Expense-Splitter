@@ -29,7 +29,6 @@ const ExpenseFormPage = lazy(() => import("@/pages/ExpenseFormPage"));
 const ExpenseDetailPage = lazy(() => import("@/pages/ExpenseDetailPage"));
 const RecurringFormPage = lazy(() => import("@/pages/RecurringFormPage"));
 const Landing = lazy(() => import("@/pages/Landing"));
-const DesignPreview = import.meta.env.DEV ? lazy(() => import("@/pages/DesignPreview")) : null;
 
 function RootRoute() {
   const { status } = useAuth();
@@ -57,7 +56,6 @@ export default function App() {
             <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/join/:code" element={<JoinPage />} />
-            {DesignPreview && <Route path="/design" element={<DesignPreview />} />}
 
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
