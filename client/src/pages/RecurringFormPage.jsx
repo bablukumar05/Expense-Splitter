@@ -65,11 +65,11 @@ export default function RecurringFormPage() {
   const group = groupQuery.data;
   const existing = recurringQuery.data;
 
+  const me = useMemo(() => findMe(group, user), [group, user]);
   const participants = useMemo(
-    () => (group ? buildParticipants(group.members) : []),
-    [group]
+    () => (group ? buildParticipants(group, me, existing?.template) : []),
+    [group, me, existing]
   );
-  const me = useMemo(() => findMe(group?.members, user), [group, user]);
 
   const [description, setDescription] = useState("");
   const [amountInput, setAmountInput] = useState("");
