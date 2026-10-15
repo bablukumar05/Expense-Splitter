@@ -1,63 +1,134 @@
 # SplitMate — Group Expense Sharing & Debt Simplification Platform
 
-A production-grade, full-stack expense sharing application built with the MERN stack. Create groups, split expenses across multiple payers and split types, track net balances, and minimize settlement transactions using graph-based debt simplification.
+[![Live Demo](https://img.shields.io/badge/Demo-Live_Website-6366f1?style=for-the-badge&logo=vercel)](https://expense-splitter-ochre-seven.vercel.app)
+[![API Docs](https://img.shields.io/badge/API-Swagger_Docs-10b981?style=for-the-badge&logo=swagger)](https://expense-splitter-e70k.onrender.com/api/docs)
+[![React](https://img.shields.io/badge/React_18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS_v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 
-## Key Engineering Highlights
+A modern, full-stack expense sharing web application built with the MERN stack. Split expenses across multiple payers and custom splits (Equal, Exact, Percentage, Shares), track net group balances, and minimize settlement transactions using graph-based debt simplification with one-click UPI payments.
 
-- **Financial Precision in Discrete Integer Paise**: All expense amounts, splits, and balances are stored as discrete integer paise, eliminating IEEE-754 floating-point inaccuracies. Split rounding implements the Largest Remainder Method to guarantee that sum of splits equals total amount with 0 paise variance.
-- **Graph Debt Simplification Algorithm**: Collapses multi-party circular debts into the minimum possible settlement transactions.
-- **ACID Transactions**: MongoDB multi-document transactions ensure atomicity during expense creation, deletion, and settlement processing.
-- **Modern Responsive UX**: Glassmorphism dark mode with Tailwind CSS v4, PWA offline support with precaching, and TanStack React Query for async state management and cache invalidation.
+---
 
-## Core Features
+## 🚀 Live Links
 
-- **Groups & Invites**: Group creation with categories, secure invite links with expiration/usage limits, QR codes, and placeholder members.
-- **Multi-Method Expense Splitting**: Supports Equal, Exact, Percentage, and Shares-based allocations with multiple payers.
-- **Receipts & Attachments**: Photo upload with in-browser compression.
-- **Settlement & Settle Up**: Minimum-transactions debt simplification plan, UPI deep link integration, and transaction undo functionality.
-- **Analytics & Visualizations**: Category breakdowns, monthly spending trends, and top spender tracking powered by Recharts.
-- **Export Reports**: One-click statement generation in CSV and PDF formats.
-- **Recurring Expenses**: Automated weekly/monthly recurring rules with pause, resume, and skip controls.
-- **Authentication & Security**: JWT with access and refresh token rotation, Web Locks tab synchronization, and secure password reset workflows.
+- **Web Application:** [https://expense-splitter-ochre-seven.vercel.app](https://expense-splitter-ochre-seven.vercel.app)
+- **Backend API:** [https://expense-splitter-e70k.onrender.com](https://expense-splitter-e70k.onrender.com)
+- **Interactive Swagger API Docs:** [https://expense-splitter-e70k.onrender.com/api/docs](https://expense-splitter-e70k.onrender.com/api/docs)
 
-## Tech Stack
+---
 
-- **Frontend**: React 18, Vite, Tailwind CSS v4, TanStack Query, React Hook Form, Zod, Recharts, Lucide Icons, Vite PWA
-- **Backend**: Node.js, Express.js, MongoDB, Mongoose, JWT, Swagger OpenAPI
+## ⚡ Key Engineering Highlights
 
-## Getting Started
+- **Discrete Integer Paise Precision:** All money values, splits, and balances are calculated and stored as integer paise to eliminate IEEE-754 floating-point inaccuracies. Implements the Largest Remainder Method to guarantee split totals match exactly with zero variance.
+- **Graph Debt Simplification:** Automatically collapses complex circular debts among members into the minimal number of direct settlement transfers.
+- **ACID Database Transactions:** Multi-document MongoDB transactions ensure atomicity across expense creation, balance revisions, and settlement recording.
+- **Progressive Web App (PWA):** Installable on desktop and mobile devices with Workbox offline precaching support.
+- **Production-Grade Security:** JWT access and refresh token rotation, cross-tab synchronization via Web Locks API, rate limiting, and HTTP-only cookie support.
 
-### 1. Backend Setup
+---
+
+## ✨ Features
+
+- **Group Management:** Categories (Trip, Home, Friends, etc.), invite links with expiration and usage limits, QR code scanning, and placeholder members.
+- **Flexible Expense Splitting:** Equal, Exact, Percentage, and Shares-based allocations with support for multiple payers.
+- **Receipt Attachments:** Image upload with automated in-browser client compression powered by Cloudinary.
+- **One-Tap Settle Up:** Minimal payment plans with deep-linked UPI settlement links (`upi://pay`) and settlement reversal/undo capabilities.
+- **Visual Analytics:** Interactive monthly spending charts, category breakdown donuts, and top spender bars powered by Recharts.
+- **Export Statements:** Instant export of complete group expense histories to CSV and PDF formats.
+- **Recurring Expenses:** Automated weekly and monthly scheduled expenses with pause, resume, and skip controls.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technologies |
+|---|---|
+| **Frontend** | React 18, Vite, Tailwind CSS v4, TanStack Query v5, React Hook Form, Zod, Recharts, Lucide Icons, Vite PWA |
+| **Backend** | Node.js (v20+), Express.js, MongoDB Atlas, Mongoose, JWT, Nodemailer, Cloudinary, Swagger / OpenAPI 3.0 |
+| **Deployment** | Vercel (Frontend), Render (Backend), MongoDB Atlas (Database) |
+
+---
+
+## 🏁 Getting Started
+
+### Prerequisites
+- Node.js >= 20.0.0
+- MongoDB instance (Local or Atlas)
+- npm or yarn
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/bablukumar05/Expense-Splitter.git
+cd Expense-Splitter
+```
+
+### 2. Backend Setup
 ```bash
 cd server
 npm install
-npm run dev
 ```
 
-### 2. Frontend Setup
+Create a `.env` file in the `server` directory:
+```env
+PORT=5000
+NODE_ENV=development
+MONGO_URI=your_mongodb_connection_string
+JWT_ACCESS_SECRET=your_jwt_secret_min_32_characters
+FRONTEND_URL=http://localhost:5173
+CORS_ORIGINS=http://localhost:5173
+```
+
+Start backend development server:
 ```bash
-cd client
-npm install
 npm run dev
 ```
 
-### Environment Configuration
+### 3. Frontend Setup
+```bash
+cd ../client
+npm install
+```
 
-| Variable | Description |
-|---|---|
-| `VITE_API_URL` | Backend API base URL (e.g. `http://localhost:5000/api`) |
-| `VITE_APP_URL` | Public application URL |
-| `VITE_DEMO_EMAIL` | Optional live demo email credentials |
-| `VITE_DEMO_PASSWORD` | Optional live demo password credentials |
+Create a `.env` file in the `client` directory:
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_APP_URL=http://localhost:5173
+```
 
-## Available Scripts
+Start frontend development server:
+```bash
+npm run dev
+```
 
-- `npm run dev`: Launch local development server
-- `npm run build`: Production build with PWA service worker precaching
+The application will be live at `http://localhost:5173`.
+
+---
+
+## 📜 Available Scripts
+
+### Client (`/client`)
+- `npm run dev`: Launch local development server with HMR
+- `npm run build`: Compile optimized production build with PWA service worker
 - `npm run preview`: Preview production build locally
+- `npm run lint`: Run Oxlint code analysis
 
-## Deployment
+### Server (`/server`)
+- `npm run dev`: Launch server with file watching
+- `npm start`: Start production server
+- `npm run check`: Verify syntax on server entry files
+- `npm run seed`: Seed database with demo group and mock data
 
-- **Frontend**: Vercel (SPA routing configured in `vercel.json`)
-- **Backend**: Render
-- **Database**: MongoDB Atlas
+---
+
+## 👨‍💻 Author
+
+**Bablu Kumar**  
+- GitHub: [@bablukumar05](https://github.com/bablukumar05)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
